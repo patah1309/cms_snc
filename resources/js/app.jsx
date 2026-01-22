@@ -141,7 +141,7 @@ function App() {
     };
 
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/admin">
             <Routes>
                 <Route path="/" element={<Navigate to={token ? '/dashboard' : '/login'} replace />} />
                 <Route path="/login" element={<AuthPage mode="login" onLogin={handleLogin} />} />
