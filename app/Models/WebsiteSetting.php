@@ -14,6 +14,7 @@ class WebsiteSetting extends Model
         'address',
         'email',
         'phone',
+        'whatsapp_number',
         'about_us',
         'core_values',
         'approach',

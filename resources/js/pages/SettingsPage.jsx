@@ -10,6 +10,7 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
         address: '',
         email: '',
         phone: '',
+        whatsapp_number: '',
         about_us: '',
         core_values: '',
         approach: '',
@@ -72,6 +73,7 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
                     address: settings.address || '',
                     email: settings.email || '',
                     phone: settings.phone || '',
+                    whatsapp_number: settings.whatsapp_number || '',
                     about_us: settings.about_us || '',
                     core_values: settings.core_values || '',
                     approach: settings.approach || '',
@@ -363,6 +365,15 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
                                 onChange={(e) => updateField('phone', e.target.value)}
                                 placeholder="021-xxxxxxx"
                             />
+                        </label>
+                        <label>
+                            WhatsApp
+                            <input
+                                value={form.whatsapp_number}
+                                onChange={(e) => updateField('whatsapp_number', e.target.value)}
+                                placeholder="62812xxxxxxx"
+                            />
+                            <div className="muted">Gunakan format internasional tanpa +</div>
                         </label>
                         <label>
                             About Us

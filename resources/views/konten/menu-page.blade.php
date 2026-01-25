@@ -19,24 +19,18 @@
         </div>
     </div>
 
-    <div class="container-xxl py-5">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="border rounded-3 p-4 shadow-sm bg-white">
-                        <h2 class="mb-3 text-center">{{ $page->title ?: $menu->title }}</h2>
-                        @if (!empty($page->image_path))
-                            <img
-                                src="{{ url($page->image_path) }}"
-                                class="img-fluid rounded mb-4 d-block mx-auto"
-                                alt="{{ $page->title ?: $menu->title }}"
-                            >
-                        @endif
-                        <div class="text-muted">
-                            {!! $page->body !!}
-                        </div>
-                    </div>
-                </div>
+    <div class="container-fluid py-5">
+        <div class="container-fluid px-4 px-lg-5">
+            <h2 class="mb-3 text-center">{{ $page->title ?: $menu->title }}</h2>
+            @if (!empty($page->image_path))
+                <img
+                    src="{{ url($page->image_path) }}"
+                    class="img-fluid rounded mb-4 d-block mx-auto"
+                    alt="{{ $page->title ?: $menu->title }}"
+                >
+            @endif
+            <div class="text-muted">
+                {!! $page->body !!}
             </div>
         </div>
     </div>

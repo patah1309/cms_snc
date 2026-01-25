@@ -4,6 +4,10 @@
 
 @section('content')
 @php
+    $whatsappNumber = preg_replace('/\D+/', '', $settings?->whatsapp_number ?? '');
+    $whatsappUrl = $whatsappNumber
+        ? 'https://wa.me/' . $whatsappNumber . '?text=' . rawurlencode('Hello Satu Nusa Capital, I would like to request a consultation.')
+        : 'https://wa.me/62812xxxxxxx?text=Hello%20Satu%20Nusa%20Capital,%20I%20would%20like%20to%20request%20a%20consultation.';
     $ipoInsightLink = '/ipo-insight';
     foreach (($navMenus ?? []) as $menu) {
         $slug = $menu['href'] ?? '';
@@ -39,7 +43,7 @@
                                     <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 760px;"> End-to-end advisory across IPO readiness, corporate actions, M&A, and restructuring-focused on value creation for clients, shareholders, and stakeholders. </p>
                                     <div class="d-flex flex-wrap gap-2 animated slideInDown">
                                         <a href="/services" class="btn btn-primary py-3 px-5"> Our Services </a>
-                                        <a href="https://wa.me/62812xxxxxxx?text=Hello%20Satu%20Nusa%20Capital,%20I%20would%20like%20to%20request%20a%20consultation." class="btn btn-whatsapp py-3 px-5" target="_blank" rel="noopener">
+                                        <a href="{{ $whatsappUrl }}" class="btn btn-whatsapp py-3 px-5" target="_blank" rel="noopener">
                                             <i class="fab fa-whatsapp me-2"></i>Request Consultation </a>
                                         <a href="/contact" class="btn btn-outline-light py-3 px-5"> Contact Us </a>
                                     </div>
