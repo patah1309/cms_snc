@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { ICONS } from '../components/IconMap';
 import { swalDefaults } from '../utils/swal';
+import SunEditor from 'suneditor-react';
+import 'suneditor/dist/css/suneditor.min.css';
 
 export default function MenuPage({ authApi }) {
     const [menus, setMenus] = useState([]);
@@ -12,13 +14,26 @@ export default function MenuPage({ authApi }) {
         parent_id: '',
         sort_order: 0,
         is_visible: true,
+        page_title: '',
+        page_body: '',
     });
+    const [slugTouched, setSlugTouched] = useState(false);
+    const [urlTouched, setUrlTouched] = useState(false);
+    const [pageImage, setPageImage] = useState(null);
+    const [pagePreviewUrl, setPagePreviewUrl] = useState(null);
     const [editingMenuId, setEditingMenuId] = useState(null);
 
+    const loadMenus = async () => {
+        try {
+            const res = await authApi.get('/menus');
+            setMenus(res.data.menus || []);
+        } catch {
+            setMenus([]);
+        }
+    };
+
     useEffect(() => {
-        authApi.get('/menus')
-            .then((res) => setMenus(res.data.menus || []))
-            .catch(() => setMenus([]));
+        loadMenus();
     }, [authApi]);
 
     const buildTree = (items, parentId = null, depth = 0) => {
@@ -32,6 +47,32 @@ export default function MenuPage({ authApi }) {
     };
 
     const treeMenus = buildTree(menus);
+    const editingMenu = editingMenuId ? menus.find((item) => item.id === editingMenuId) : null;
+    const editingHasChildren = editingMenu ? menus.some((item) => item.parent_id === editingMenu.id) : false;
+
+    const toSlug = (value) => {
+        return value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+    };
+
+    const resolveParentSlug = (parentId) => {
+        if (!parentId) return '';
+        const parent = menus.find((item) => item.id === Number(parentId));
+        return parent?.slug || '';
+    };
+
+    const buildMenuUrl = (slug, parentId) => {
+        if (!slug) return '';
+        const parentSlug = resolveParentSlug(parentId);
+        if (parentSlug) {
+            return `/${parentSlug}/${slug}`;
+        }
+        return `/${slug}`;
+    };
 
     const openCreateMenu = () => {
         setEditingMenuId(null);
@@ -42,7 +83,13 @@ export default function MenuPage({ authApi }) {
             parent_id: '',
             sort_order: 0,
             is_visible: true,
+            page_title: '',
+            page_body: '',
         });
+        setSlugTouched(false);
+        setUrlTouched(false);
+        setPageImage(null);
+        setPagePreviewUrl(null);
     };
 
     const openEditMenu = (menu) => {
@@ -54,29 +101,56 @@ export default function MenuPage({ authApi }) {
             parent_id: menu.parent_id || '',
             sort_order: menu.sort_order ?? 0,
             is_visible: !!menu.is_visible,
+            page_title: menu.page?.title || '',
+            page_body: menu.page?.body || '',
         });
+        setSlugTouched(true);
+        setUrlTouched(true);
+        setPageImage(null);
+        setPagePreviewUrl(menu.page?.image_path ? `/${menu.page.image_path}` : null);
     };
+
+    useEffect(() => {
+        if (!pageImage) {
+            setPagePreviewUrl((prev) => (prev && prev.startsWith('blob:') ? null : prev));
+            return;
+        }
+        const url = URL.createObjectURL(pageImage);
+        setPagePreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [pageImage]);
+
 
     const handleMenuSubmit = async (e) => {
         e.preventDefault();
-        const payload = {
-            title: menuForm.title,
-            slug: menuForm.slug || null,
-            url: menuForm.url || null,
-            parent_id: menuForm.parent_id ? Number(menuForm.parent_id) : null,
-            sort_order: Number(menuForm.sort_order || 0),
-            is_visible: menuForm.is_visible,
-        };
+        const payload = new FormData();
+        payload.append('title', menuForm.title);
+        payload.append('slug', menuForm.slug || '');
+        payload.append('url', menuForm.url || '');
+        payload.append('parent_id', menuForm.parent_id ? String(menuForm.parent_id) : '');
+        payload.append('sort_order', String(Number(menuForm.sort_order || 0)));
+        payload.append('is_visible', menuForm.is_visible ? '1' : '0');
+        payload.append('page_title', menuForm.page_title || '');
+        payload.append('page_body', menuForm.page_body || '');
+        if (pageImage) {
+            payload.append('page_image', pageImage);
+        }
         try {
             if (editingMenuId) {
-                const res = await authApi.put(`/menus/${editingMenuId}`, payload);
+                payload.append('_method', 'PUT');
+                const res = await authApi.post(`/menus/${editingMenuId}`, payload, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
                 setMenus((prev) =>
                     prev.map((row) => (row.id === editingMenuId ? res.data.menu : row))
                 );
             } else {
-                const res = await authApi.post('/menus', payload);
+                const res = await authApi.post('/menus', payload, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
                 setMenus((prev) => [...prev, res.data.menu].sort((a, b) => a.sort_order - b.sort_order));
             }
+            await loadMenus();
             const modalEl = document.getElementById('menuModal');
             if (window.bootstrap && modalEl) {
                 window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
@@ -162,7 +236,7 @@ export default function MenuPage({ authApi }) {
                                                     onClick={async () => {
                                                         try {
                                                             await authApi.delete(`/menus/${menu.id}`);
-                                                            setMenus((prev) => prev.filter((row) => row.id !== menu.id));
+                                                            await loadMenus();
                                                         } catch (err) {
                                                             const errorMessage = err?.response?.data?.message || 'Gagal menghapus menu.';
                                                             await Swal.fire({
@@ -191,7 +265,7 @@ export default function MenuPage({ authApi }) {
                     </table>
                 </div>
             </div>
-            <div className="modal fade" id="menuModal" tabIndex="-1" aria-hidden="true">
+            <div className="modal fade" id="menuModal" tabIndex="-1" aria-hidden="true" data-bs-focus="false">
                 <div className="modal-dialog modal-lg">
                     <div className="modal-content">
                         <form onSubmit={handleMenuSubmit}>
@@ -206,7 +280,20 @@ export default function MenuPage({ authApi }) {
                                         <input
                                             className="form-control"
                                             value={menuForm.title}
-                                            onChange={(e) => setMenuForm((prev) => ({ ...prev, title: e.target.value }))}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setMenuForm((prev) => {
+                                                    const next = { ...prev, title: value };
+                                                    if (!slugTouched) {
+                                                        const nextSlug = toSlug(value);
+                                                        next.slug = nextSlug;
+                                                        if (!urlTouched) {
+                                                            next.url = buildMenuUrl(nextSlug, prev.parent_id);
+                                                        }
+                                                    }
+                                                    return next;
+                                                });
+                                            }}
                                             required
                                         />
                                     </div>
@@ -215,7 +302,17 @@ export default function MenuPage({ authApi }) {
                                         <input
                                             className="form-control"
                                             value={menuForm.slug}
-                                            onChange={(e) => setMenuForm((prev) => ({ ...prev, slug: e.target.value }))}
+                                            onChange={(e) => {
+                                                const nextSlug = toSlug(e.target.value);
+                                                setSlugTouched(true);
+                                                setMenuForm((prev) => {
+                                                    const next = { ...prev, slug: nextSlug };
+                                                    if (!urlTouched) {
+                                                        next.url = buildMenuUrl(nextSlug, prev.parent_id);
+                                                    }
+                                                    return next;
+                                                });
+                                            }}
                                         />
                                     </div>
                                     <div className="col-md-6">
@@ -223,8 +320,12 @@ export default function MenuPage({ authApi }) {
                                         <input
                                             className="form-control"
                                             value={menuForm.url}
-                                            onChange={(e) => setMenuForm((prev) => ({ ...prev, url: e.target.value }))}
+                                            onChange={(e) => {
+                                                setUrlTouched(true);
+                                                setMenuForm((prev) => ({ ...prev, url: e.target.value }));
+                                            }}
                                             placeholder="https:// atau /about"
+                                            disabled={editingHasChildren}
                                         />
                                     </div>
                                     <div className="col-md-6">
@@ -232,7 +333,16 @@ export default function MenuPage({ authApi }) {
                                         <select
                                             className="form-select"
                                             value={menuForm.parent_id}
-                                            onChange={(e) => setMenuForm((prev) => ({ ...prev, parent_id: e.target.value }))}
+                                            onChange={(e) => {
+                                                const nextParentId = e.target.value;
+                                                setMenuForm((prev) => {
+                                                    const next = { ...prev, parent_id: nextParentId };
+                                                    if (!urlTouched) {
+                                                        next.url = buildMenuUrl(prev.slug, nextParentId);
+                                                    }
+                                                    return next;
+                                                });
+                                            }}
                                         >
                                             <option value="">Tidak ada</option>
                                             {menus.filter((m) => m.id !== editingMenuId).map((m) => (
@@ -260,6 +370,63 @@ export default function MenuPage({ authApi }) {
                                             />
                                             <label className="form-check-label">Tampilkan</label>
                                         </div>
+                                    </div>
+                                    <div className="col-12">
+                                        <hr />
+                                        <h6 className="mb-3">Konten Halaman</h6>
+                                        {editingHasChildren && (
+                                            <div className="alert alert-warning mb-3">
+                                                Menu parent tidak punya halaman.
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Judul Halaman</label>
+                                        <input
+                                            className="form-control"
+                                            value={menuForm.page_title}
+                                            onChange={(e) => setMenuForm((prev) => ({ ...prev, page_title: e.target.value }))}
+                                            disabled={editingHasChildren}
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Gambar</label>
+                                        <input
+                                            className="form-control"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setPageImage(e.target.files?.[0] || null)}
+                                            disabled={editingHasChildren}
+                                        />
+                                        {pagePreviewUrl && (
+                                            <div className="preview-wrap mt-2">
+                                                <img src={pagePreviewUrl} alt="Preview" className="preview-thumb" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="col-12">
+                                        <label className="form-label">Penjelasan</label>
+                                        <SunEditor
+                                            setContents={menuForm.page_body}
+                                            onChange={(value) => setMenuForm((prev) => ({ ...prev, page_body: value }))}
+                                            height="260px"
+                                            disable={editingHasChildren}
+                                            setOptions={{
+                                                imageUploadUrl: '/api/uploads/editor',
+                                                imageUploadHeader: (() => {
+                                                    const token = localStorage.getItem('auth_token');
+                                                    return token ? { Authorization: `Bearer ${token}` } : {};
+                                                })(),
+                                                buttonList: [
+                                                    ['undo', 'redo'],
+                                                    ['formatBlock', 'bold', 'underline', 'italic', 'strike'],
+                                                    ['fontColor', 'hiliteColor', 'removeFormat'],
+                                                    ['align', 'list', 'outdent', 'indent'],
+                                                    ['table', 'link', 'image', 'video'],
+                                                    ['fullScreen', 'codeView', 'preview'],
+                                                ],
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>

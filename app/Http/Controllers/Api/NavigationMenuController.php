@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MenuPage;
 use App\Models\NavigationMenu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 
 class NavigationMenuController extends Controller
 {
@@ -24,6 +26,7 @@ class NavigationMenuController extends Controller
         $menus = NavigationMenu::query()
             ->orderBy('sort_order')
             ->orderBy('id')
+            ->with('page')
             ->get();
 
         return response()->json(['menus' => $menus]);
@@ -40,18 +43,24 @@ class NavigationMenuController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:navigation_menus,id'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_visible' => ['nullable', 'boolean'],
+            'page_title' => ['nullable', 'string', 'max:255'],
+            'page_body' => ['nullable', 'string'],
+            'page_image' => ['nullable', 'image', 'max:4096'],
         ]);
 
         $menu = NavigationMenu::create([
             'title' => $validated['title'],
-            'slug' => $validated['slug'] ?? null,
-            'url' => $validated['url'] ?? null,
+            'slug' => $this->nullIfEmpty($validated['slug'] ?? null),
+            'url' => $this->nullIfEmpty($validated['url'] ?? null),
             'parent_id' => $validated['parent_id'] ?? null,
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_visible' => $request->boolean('is_visible', true),
         ]);
 
-        return response()->json(['menu' => $menu], 201);
+        $this->syncPage($request, $menu, $validated);
+        $this->removeParentPage($menu->parent_id);
+
+        return response()->json(['menu' => $menu->load('page')], 201);
     }
 
     public function update(Request $request, NavigationMenu $menu)
@@ -65,26 +74,113 @@ class NavigationMenuController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:navigation_menus,id'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_visible' => ['nullable', 'boolean'],
+            'page_title' => ['nullable', 'string', 'max:255'],
+            'page_body' => ['nullable', 'string'],
+            'page_image' => ['nullable', 'image', 'max:4096'],
         ]);
 
         $menu->update([
             'title' => $validated['title'],
-            'slug' => $validated['slug'] ?? null,
-            'url' => $validated['url'] ?? null,
+            'slug' => $this->nullIfEmpty($validated['slug'] ?? null),
+            'url' => $this->nullIfEmpty($validated['url'] ?? null),
             'parent_id' => $validated['parent_id'] ?? null,
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_visible' => $request->boolean('is_visible', $menu->is_visible),
         ]);
 
-        return response()->json(['menu' => $menu]);
+        $this->syncPage($request, $menu, $validated);
+        $this->removeParentPage($menu->parent_id);
+
+        return response()->json(['menu' => $menu->load('page')]);
     }
 
     public function destroy(Request $request, NavigationMenu $menu)
     {
         $this->authorizeMenu($request, 'delete');
 
+        if ($menu->page && $menu->page->image_path) {
+            $this->deletePublicImage($menu->page->image_path);
+        }
         $menu->delete();
 
         return response()->json(['message' => 'Menu dihapus.']);
+    }
+
+    private function syncPage(Request $request, NavigationMenu $menu, array $validated): void
+    {
+        $hasChildren = NavigationMenu::query()
+            ->where('parent_id', $menu->id)
+            ->exists();
+
+        if ($hasChildren) {
+            if ($menu->page?->image_path) {
+                $this->deletePublicImage($menu->page->image_path);
+            }
+            $menu->page()?->delete();
+            return;
+        }
+
+        $data = [
+            'title' => $this->nullIfEmpty($validated['page_title'] ?? null),
+            'body' => $this->nullIfEmpty($validated['page_body'] ?? null),
+        ];
+
+        if ($request->hasFile('page_image')) {
+            if ($menu->page?->image_path) {
+                $this->deletePublicImage($menu->page->image_path);
+            }
+            $data['image_path'] = $this->storePublicImage($request->file('page_image'));
+        }
+
+        MenuPage::updateOrCreate(
+            ['menu_id' => $menu->id],
+            $data
+        );
+    }
+
+    private function removeParentPage(?int $parentId): void
+    {
+        if (!$parentId) {
+            return;
+        }
+
+        $parent = NavigationMenu::query()->with('page')->find($parentId);
+        if (!$parent || !$parent->page) {
+            return;
+        }
+
+        if ($parent->page->image_path) {
+            $this->deletePublicImage($parent->page->image_path);
+        }
+        $parent->page()->delete();
+    }
+
+    private function nullIfEmpty(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $trimmed = trim($value);
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    private function storePublicImage($file): string
+    {
+        $dir = public_path('uploads/pages');
+        if (!File::exists($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+        $filename = uniqid('page_', true) . '.' . $file->getClientOriginalExtension();
+        $file->move($dir, $filename);
+
+        return 'uploads/pages/' . $filename;
+    }
+
+    private function deletePublicImage(string $path): void
+    {
+        $full = public_path($path);
+        if (File::exists($full)) {
+            File::delete($full);
+        }
     }
 }

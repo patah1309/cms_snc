@@ -226,6 +226,7 @@ button.ghost {
     grid-template-columns: 240px 1fr;
     min-height: 100vh;
     background: var(--bg);
+    overflow-x: hidden;
 }
 
 .sidebar {
@@ -358,6 +359,21 @@ button.ghost {
     justify-content: center;
 }
 
+.sidebar-overlay {
+    display: none;
+    border: none;
+    padding: 0;
+    background: rgba(8, 12, 20, 0.45);
+}
+
+.mobile-toggle {
+    display: none;
+}
+
+.desktop-only {
+    display: inline-flex;
+}
+
 .profile-btn {
     display: inline-flex;
     align-items: center;
@@ -395,6 +411,7 @@ button.ghost {
 .cms.collapsed .nav-item {
     justify-content: center;
 }
+
 
 .main {
     display: flex;
@@ -789,13 +806,95 @@ button.ghost {
     }
 
     .sidebar {
-        flex-direction: row;
-        align-items: center;
-        flex-wrap: wrap;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        height: 100vh;
+        z-index: 60;
+        padding: 1.2rem 1rem;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 18px 0 30px rgba(10, 12, 20, 0.2);
     }
 
     .nav-item {
-        width: auto;
+        width: 100%;
+    }
+
+    .sidebar nav {
+        width: 100%;
+        display: grid;
+        gap: 0.4rem;
+        padding-right: 0;
+    }
+
+    .nav-item,
+    .nav-child {
+        white-space: normal;
+    }
+
+    .nav-group {
+        width: 100%;
+    }
+
+    .nav-submenu {
+        padding-left: 0.6rem;
+    }
+
+    .topbar {
+        padding: 0.9rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+    }
+
+    .main-body {
+        padding: 1.2rem;
+    }
+
+    .cms-footer {
+        padding: 0.8rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+
+    .mobile-toggle {
+        display: inline-flex;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .cms.mobile-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+    }
+
+    .cms.mobile-open .sidebar-overlay {
+        display: block;
+    }
+}
+
+@media (max-width: 600px) {
+    .sidebar {
+        gap: 0.8rem;
+    }
+
+    .brand-text,
+    .topbar-brand {
+        display: none;
+    }
+
+    .nav-item {
+        flex: 1 1 auto;
+        justify-content: center;
     }
 }
 

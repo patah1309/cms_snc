@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class UserPermissionController extends Controller
 {
-    private const MENUS = ['home', 'about', 'services', 'news', 'settings', 'menus', 'users'];
+    private const MENUS = ['home', 'services', 'news', 'team', 'contacts', 'settings', 'menus', 'users'];
 
     private function authorizeManage(Request $request)
     {

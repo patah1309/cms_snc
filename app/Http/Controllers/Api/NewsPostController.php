@@ -41,6 +41,7 @@ class NewsPostController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:news_posts,slug'],
+            'category' => ['nullable', 'string', 'max:255'],
             'summary' => ['nullable', 'string', 'max:255'],
             'body' => ['nullable', 'string'],
             'status' => ['required', 'string', 'in:draft,published'],
@@ -59,6 +60,7 @@ class NewsPostController extends Controller
         $post = NewsPost::create([
             'title' => $validated['title'],
             'slug' => $validated['slug'],
+            'category' => $validated['category'] ?? null,
             'summary' => $validated['summary'] ?? null,
             'body' => $validated['body'] ?? null,
             'status' => $validated['status'],
@@ -77,6 +79,7 @@ class NewsPostController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:news_posts,slug,' . $post->id],
+            'category' => ['nullable', 'string', 'max:255'],
             'summary' => ['nullable', 'string', 'max:255'],
             'body' => ['nullable', 'string'],
             'status' => ['required', 'string', 'in:draft,published'],
@@ -98,6 +101,7 @@ class NewsPostController extends Controller
         $post->update([
             'title' => $validated['title'],
             'slug' => $validated['slug'],
+            'category' => $validated['category'] ?? null,
             'summary' => $validated['summary'] ?? null,
             'body' => $validated['body'] ?? null,
             'status' => $validated['status'],
@@ -126,6 +130,7 @@ class NewsPostController extends Controller
             'id' => $post->id,
             'title' => $post->title,
             'slug' => $post->slug,
+            'category' => $post->category,
             'summary' => $post->summary,
             'body' => $post->body,
             'status' => $post->status,

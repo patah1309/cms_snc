@@ -18,6 +18,7 @@ class NewsPost extends Model
     protected $fillable = [
         'title',
         'slug',
+        'category',
         'summary',
         'body',
         'cover_image_path',

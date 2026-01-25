@@ -17,6 +17,7 @@ class CompanyProfileSectionSeeder extends Seeder
             ['slug' => 'about', 'title' => 'About'],
             ['slug' => 'services', 'title' => 'Services'],
             ['slug' => 'news', 'title' => 'News'],
+            ['slug' => 'team', 'title' => 'Team'],
         ];
 
         foreach ($sections as $section) {

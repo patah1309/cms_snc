@@ -12,7 +12,7 @@ class PermissionController extends Controller
         $user = $request->user();
         $user->load('menuPermissions');
 
-        $defaultMenus = ['home', 'about', 'services', 'news', 'settings', 'menus', 'users'];
+        $defaultMenus = ['home', 'services', 'news', 'team', 'contacts', 'settings', 'menus', 'users'];
         $permissions = collect($defaultMenus)->mapWithKeys(function ($menu) {
             return [
                 $menu => [

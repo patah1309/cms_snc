@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ICONS } from '../components/IconMap';
-import { CONTENT_MENUS, NAV_MENU, SETTINGS_MENU, USERS_MENU } from '../constants/menus';
+import { CONTACTS_MENU, CONTENT_MENUS, NAV_MENU, SETTINGS_MENU, USERS_MENU } from '../constants/menus';
 import AccessPage from '../pages/AccessPage';
+import ContactMessagesPage from '../pages/ContactMessagesPage';
 import DashboardPage from '../pages/DashboardPage';
 import MenuPage from '../pages/MenuPage';
 import SectionPage from '../pages/SectionPage';
@@ -27,6 +28,7 @@ export default function CmsLayout({
         const saved = localStorage.getItem('cms_sidebar_collapsed');
         return saved === 'true';
     });
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem('cms_theme') || 'light';
     });
@@ -47,6 +49,52 @@ export default function CmsLayout({
         return () => clearInterval(timer);
     }, []);
 
+    useEffect(() => {
+        let startX = 0;
+        let startY = 0;
+        let tracking = false;
+
+        const handleTouchStart = (event) => {
+            if (event.touches.length !== 1) return;
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            tracking = true;
+        };
+
+        const handleTouchMove = (event) => {
+            if (!tracking || event.touches.length !== 1) return;
+            const touch = event.touches[0];
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            if (Math.abs(deltaY) > 40) {
+                tracking = false;
+                return;
+            }
+            if (startX < 24 && deltaX > 60) {
+                setMobileNavOpen(true);
+                tracking = false;
+            } else if (startX > 60 && deltaX < -60) {
+                setMobileNavOpen(false);
+                tracking = false;
+            }
+        };
+
+        const handleTouchEnd = () => {
+            tracking = false;
+        };
+
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchmove', handleTouchMove, { passive: true });
+        document.addEventListener('touchend', handleTouchEnd);
+
+        return () => {
+            document.removeEventListener('touchstart', handleTouchStart);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, []);
+
     const companyName = appSettings?.company_name || 'Company Profile';
 
     useEffect(() => {
@@ -54,6 +102,8 @@ export default function CmsLayout({
         let pageTitle = 'Dashboard';
         if (path.startsWith('/cms/settings')) {
             pageTitle = 'Settings Website';
+        } else if (path.startsWith('/cms/contacts')) {
+            pageTitle = 'Contacts';
         } else if (path.startsWith('/cms/menus')) {
             pageTitle = 'Navigation Menu';
         } else if (path.startsWith('/cms/users')) {
@@ -68,8 +118,13 @@ export default function CmsLayout({
         document.title = `${companyName} - ${pageTitle}`;
     }, [companyName, location.pathname]);
 
+    const handleNavigate = (path) => {
+        navigate(path);
+        setMobileNavOpen(false);
+    };
+
     return (
-        <div className={`cms ${collapsed ? 'collapsed' : ''}`}>
+        <div className={`cms ${collapsed ? 'collapsed' : ''} ${mobileNavOpen ? 'mobile-open' : ''}`}>
             <aside className="sidebar">
                 <div className="brand">
                     <span className="brand-icon">
@@ -80,7 +135,7 @@ export default function CmsLayout({
                 <nav>
                     <button
                         className="nav-item"
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => handleNavigate('/dashboard')}
                     >
                         <span className="icon">{ICONS.dashboard}</span>
                         <span className="label">Dashboard</span>
@@ -89,7 +144,7 @@ export default function CmsLayout({
                         <button
                             key={item.slug}
                             className="nav-item"
-                            onClick={() => navigate(`/cms/${item.slug}`)}
+                            onClick={() => handleNavigate(`/cms/${item.slug}`)}
                         >
                             <span className="icon">{ICONS[item.slug] || ICONS.dashboard}</span>
                             <span className="label">{item.label}</span>
@@ -98,16 +153,25 @@ export default function CmsLayout({
                     {canView(SETTINGS_MENU.slug) && (
                         <button
                             className="nav-item"
-                            onClick={() => navigate('/cms/settings')}
+                            onClick={() => handleNavigate('/cms/settings')}
                         >
                             <span className="icon">{ICONS.settings}</span>
                             <span className="label">{SETTINGS_MENU.label}</span>
                         </button>
                     )}
+                    {canView(CONTACTS_MENU.slug) && (
+                        <button
+                            className="nav-item"
+                            onClick={() => handleNavigate('/cms/contacts')}
+                        >
+                            <span className="icon">{ICONS.contacts}</span>
+                            <span className="label">{CONTACTS_MENU.label}</span>
+                        </button>
+                    )}
                     {canView(NAV_MENU.slug) && (
                         <button
                             className="nav-item"
-                            onClick={() => navigate('/cms/menus')}
+                            onClick={() => handleNavigate('/cms/menus')}
                         >
                             <span className="icon">{ICONS.menus}</span>
                             <span className="label">{NAV_MENU.label}</span>
@@ -130,7 +194,7 @@ export default function CmsLayout({
                                 {canView(USERS_MENU.slug) && (
                                     <button
                                         className="nav-item nav-child"
-                                        onClick={() => navigate('/cms/users')}
+                                        onClick={() => handleNavigate('/cms/users')}
                                     >
                                         <span className="icon">{ICONS.users}</span>
                                         <span className="label">{USERS_MENU.label}</span>
@@ -139,7 +203,7 @@ export default function CmsLayout({
                                 {canManageUsers && (
                                     <button
                                         className="nav-item nav-child"
-                                        onClick={() => navigate('/cms/access')}
+                                        onClick={() => handleNavigate('/cms/access')}
                                     >
                                         <span className="icon">{ICONS.access}</span>
                                         <span className="label">User Access</span>
@@ -150,11 +214,24 @@ export default function CmsLayout({
                     )}
                 </nav>
             </aside>
+            <button
+                className="sidebar-overlay"
+                type="button"
+                aria-label="Close menu"
+                onClick={() => setMobileNavOpen(false)}
+            />
             <div className="main">
                 <header className="topbar">
                     <div className="topbar-left">
                         <button
-                            className="ghost icon-button"
+                            className="ghost icon-button mobile-toggle"
+                            onClick={() => setMobileNavOpen((prev) => !prev)}
+                            title="Toggle menu"
+                        >
+                            {ICONS.collapse}
+                        </button>
+                        <button
+                            className="ghost icon-button desktop-only"
                             onClick={() => setCollapsed((prev) => !prev)}
                             title="Toggle sidebar"
                         >
@@ -227,6 +304,7 @@ export default function CmsLayout({
                             path="/cms/settings"
                             element={<SettingsPage authApi={authApi} onSettingsUpdated={setAppSettings} />}
                         />
+                        <Route path="/cms/contacts" element={<ContactMessagesPage authApi={authApi} />} />
                         <Route path="/cms/menus" element={<MenuPage authApi={authApi} />} />
                         <Route path="/cms/users" element={<UsersPage authApi={authApi} />} />
                         <Route path="/cms/access" element={<AccessPage authApi={authApi} />} />

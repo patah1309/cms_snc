@@ -16,7 +16,7 @@
                 @if (!empty($settings?->logo_path))
                     <img src="{{ url($settings->logo_path) }}" alt="{{ $settings?->company_name ?? 'Company' }}" height="42" class="navbar-logo">
                 @else
-                    <img src="img/logo.png" alt="{{ $settings?->company_name ?? 'Company' }}" height="42" class="navbar-logo">
+                    <img src="{{ asset('img/logo.png') }}" alt="{{ $settings?->company_name ?? 'Company' }}" height="42" class="navbar-logo">
                 @endif
             </a>
 

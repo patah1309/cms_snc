@@ -13,6 +13,9 @@ use App\Http\Controllers\Api\NavigationMenuController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\NewsPostController;
 use App\Http\Controllers\Api\ServiceItemController;
+use App\Http\Controllers\Api\TeamMemberController;
+use App\Http\Controllers\Api\EditorUploadController;
+use App\Http\Controllers\Api\ContactMessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,4 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/services', [ServiceItemController::class, 'store']);
     Route::put('/services/{item}', [ServiceItemController::class, 'update']);
     Route::delete('/services/{item}', [ServiceItemController::class, 'destroy']);
+    Route::get('/team', [TeamMemberController::class, 'index']);
+    Route::post('/team', [TeamMemberController::class, 'store']);
+    Route::put('/team/{member}', [TeamMemberController::class, 'update']);
+    Route::delete('/team/{member}', [TeamMemberController::class, 'destroy']);
+    Route::get('/contacts', [ContactMessageController::class, 'index']);
+    Route::delete('/contacts/{message}', [ContactMessageController::class, 'destroy']);
+    Route::post('/uploads/editor', [EditorUploadController::class, 'store']);
 });

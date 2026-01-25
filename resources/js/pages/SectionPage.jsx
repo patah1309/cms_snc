@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import Quill from 'quill';
+import SunEditor from 'suneditor-react';
+import 'suneditor/dist/css/suneditor.min.css';
 import { CONTENT_MENUS } from '../constants/menus';
 import { getIcon } from '../components/IconMap';
 import { swalDefaults } from '../utils/swal';
 
-const TOGGLE_VISIBILITY_SLUGS = new Set(['home', 'about', 'services']);
+const TOGGLE_VISIBILITY_SLUGS = new Set(['home', 'services', 'team']);
 
 export default function SectionPage({ permissions, sections, onToggleVisibility, authApi }) {
     const { slug } = useParams();
@@ -37,6 +39,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     const [newsForm, setNewsForm] = useState({
         title: '',
         slug: '',
+        category: '',
         summary: '',
         body: '',
         status: 'draft',
@@ -60,8 +63,19 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     const [serviceImage, setServiceImage] = useState(null);
     const [servicePreviewUrl, setServicePreviewUrl] = useState(null);
     const [editingServiceId, setEditingServiceId] = useState(null);
-    const serviceEditorRef = useRef(null);
-    const serviceQuillRef = useRef(null);
+    const [teamMembers, setTeamMembers] = useState([]);
+    const [teamForm, setTeamForm] = useState({
+        name: '',
+        position: '',
+        facebook_url: '',
+        twitter_url: '',
+        instagram_url: '',
+        sort_order: 0,
+        is_active: true,
+    });
+    const [teamImage, setTeamImage] = useState(null);
+    const [teamPreviewUrl, setTeamPreviewUrl] = useState(null);
+    const [editingTeamId, setEditingTeamId] = useState(null);
 
     if (!menu) {
         return (
@@ -110,6 +124,14 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     }, [authApi, perms.can_view, slug]);
 
     useEffect(() => {
+        if (!perms.can_view || slug !== 'team') {
+            return;
+        }
+        authApi.get('/team')
+            .then((res) => setTeamMembers(res.data.members || []));
+    }, [authApi, perms.can_view, slug]);
+
+    useEffect(() => {
         if (slug !== 'news') return;
         if (summaryEditorRef.current && !summaryQuillRef.current) {
             summaryQuillRef.current = new Quill(summaryEditorRef.current, {
@@ -135,17 +157,10 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
 
     useEffect(() => {
         if (slug !== 'services') return;
-        if (serviceEditorRef.current && !serviceQuillRef.current) {
-            serviceQuillRef.current = new Quill(serviceEditorRef.current, {
-                theme: 'snow',
-                placeholder: 'Deskripsi layanan...',
-            });
-            serviceQuillRef.current.on('text-change', () => {
-                const html = serviceQuillRef.current.root.innerHTML;
-                setServiceForm((prev) => ({ ...prev, description: html }));
-            });
+        if (serviceForm.description && serviceForm.description !== '') {
+            return;
         }
-    }, [slug]);
+    }, [slug, serviceForm.description]);
 
     useEffect(() => {
         if (slug !== 'news') return;
@@ -202,6 +217,16 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         return () => URL.revokeObjectURL(url);
     }, [serviceImage]);
 
+    useEffect(() => {
+        if (!teamImage) {
+            setTeamPreviewUrl(null);
+            return;
+        }
+        const url = URL.createObjectURL(teamImage);
+        setTeamPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [teamImage]);
+
     const resetCarouselForm = () => {
         setCarouselForm({
             title: '',
@@ -219,6 +244,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setNewsForm({
             title: '',
             slug: '',
+            category: '',
             summary: '',
             body: '',
             status: 'draft',
@@ -240,9 +266,21 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setServiceImage(null);
         setServicePreviewUrl(null);
         setEditingServiceId(null);
-        if (serviceQuillRef.current) {
-            serviceQuillRef.current.root.innerHTML = '';
-        }
+    };
+
+    const resetTeamForm = () => {
+        setTeamForm({
+            name: '',
+            position: '',
+            facebook_url: '',
+            twitter_url: '',
+            instagram_url: '',
+            sort_order: 0,
+            is_active: true,
+        });
+        setTeamImage(null);
+        setTeamPreviewUrl(null);
+        setEditingTeamId(null);
     };
 
     const handleCarouselSubmit = async (e) => {
@@ -397,6 +435,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setNewsForm({
             title: post.title || '',
             slug: post.slug || '',
+            category: post.category || '',
             summary: post.summary || '',
             body: post.body || '',
             status: post.status || 'draft',
@@ -473,9 +512,6 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         setServiceImage(null);
         setServicePreviewUrl(item.cover_url || null);
-        if (serviceQuillRef.current) {
-            serviceQuillRef.current.root.innerHTML = item.description || '';
-        }
     };
 
     const handleServiceSubmit = async (e) => {
@@ -484,10 +520,6 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         Object.entries(serviceForm).forEach(([key, value]) => {
             if (key === 'is_active') {
                 payload.append(key, value ? '1' : '0');
-                return;
-            }
-            if (key === 'description' && serviceQuillRef.current) {
-                payload.append(key, serviceQuillRef.current.root.innerHTML || '');
                 return;
             }
             payload.append(key, value);
@@ -527,6 +559,70 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         }
     };
 
+    const openCreateTeam = () => {
+        resetTeamForm();
+    };
+
+    const openEditTeam = (member) => {
+        setEditingTeamId(member.id);
+        setTeamForm({
+            name: member.name || '',
+            position: member.position || '',
+            facebook_url: member.facebook_url || '',
+            twitter_url: member.twitter_url || '',
+            instagram_url: member.instagram_url || '',
+            sort_order: member.sort_order ?? 0,
+            is_active: !!member.is_active,
+        });
+        setTeamImage(null);
+        setTeamPreviewUrl(member.photo_url || null);
+    };
+
+    const handleTeamSubmit = async (e) => {
+        e.preventDefault();
+        const payload = new FormData();
+        Object.entries(teamForm).forEach(([key, value]) => {
+            if (key === 'is_active') {
+                payload.append(key, value ? '1' : '0');
+                return;
+            }
+            payload.append(key, value);
+        });
+        if (teamImage) {
+            payload.append('photo', teamImage);
+        }
+        if (editingTeamId) {
+            payload.append('_method', 'PUT');
+        }
+        try {
+            const url = editingTeamId ? `/team/${editingTeamId}` : '/team';
+            const res = await authApi.post(url, payload, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            if (editingTeamId) {
+                setTeamMembers((prev) =>
+                    prev.map((row) => (row.id === editingTeamId ? res.data.member : row))
+                );
+            } else {
+                setTeamMembers((prev) => [...prev, res.data.member].sort((a, b) => a.sort_order - b.sort_order));
+            }
+            const modalEl = document.getElementById('teamModal');
+            if (window.bootstrap && modalEl) {
+                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+            }
+            resetTeamForm();
+        } catch (err) {
+            const errorMessage = err?.response?.data?.message || 'Gagal menyimpan team.';
+            await Swal.fire({
+                ...swalDefaults,
+                icon: 'error',
+                title: 'Gagal',
+                text: errorMessage,
+                confirmButtonText: 'OK',
+            });
+        }
+    };
+
     const decodeHtml = (value) => {
         if (!value) return '';
         const el = document.createElement('textarea');
@@ -544,6 +640,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
             const payload = new FormData();
             payload.append('title', post.title);
             payload.append('slug', post.slug);
+            payload.append('category', post.category || '');
             payload.append('summary', post.summary || '');
             payload.append('body', post.body || '');
             payload.append('status', 'published');
@@ -807,6 +904,128 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                     </div>
                 </div>
             )}
+            {slug === 'team' && (
+                <div className="panel">
+                    <div className="section-toolbar">
+                        <h3>Team</h3>
+                        {perms.can_create && (
+                            <button
+                                className="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#teamModal"
+                                onClick={openCreateTeam}
+                            >
+                                <i className="fa-solid fa-plus"></i> Tambah Team
+                            </button>
+                        )}
+                    </div>
+                    <div className="table-responsive">
+                        <table className="table table-hover align-middle">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Nama</th>
+                                    <th>Jabatan</th>
+                                    <th>Sosial</th>
+                                    <th>Order</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {teamMembers.map((member) => (
+                                    <tr key={member.id}>
+                                        <td>
+                                            {member.photo_url ? (
+                                                <button
+                                                    type="button"
+                                                    className="thumb-button"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#imagePreviewModal"
+                                                    onClick={() => setPreviewImage(member.photo_url)}
+                                                >
+                                                    <img src={member.photo_url} alt={member.name || 'Team'} className="thumb" />
+                                                </button>
+                                            ) : (
+                                                <span className="helper">No image</span>
+                                            )}
+                                        </td>
+                                        <td><strong>{member.name}</strong></td>
+                                        <td className="muted">{member.position || '-'}</td>
+                                        <td>
+                                            <div className="d-flex gap-2">
+                                                {member.facebook_url ? (
+                                                    <a href={member.facebook_url} target="_blank" rel="noopener">
+                                                        <i className="fa-brands fa-facebook"></i>
+                                                    </a>
+                                                ) : null}
+                                                {member.twitter_url ? (
+                                                    <a href={member.twitter_url} target="_blank" rel="noopener">
+                                                        <i className="fa-brands fa-twitter"></i>
+                                                    </a>
+                                                ) : null}
+                                                {member.instagram_url ? (
+                                                    <a href={member.instagram_url} target="_blank" rel="noopener">
+                                                        <i className="fa-brands fa-instagram"></i>
+                                                    </a>
+                                                ) : null}
+                                                {!member.facebook_url && !member.twitter_url && !member.instagram_url && (
+                                                    <span className="muted">-</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>{member.sort_order}</td>
+                                        <td>
+                                            <span className={`badge ${member.is_active ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                                                {member.is_active ? 'Show' : 'Hide'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="btn-group">
+                                                <button
+                                                    className="btn btn-outline-secondary btn-sm"
+                                                    disabled={!perms.can_edit}
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#teamModal"
+                                                    onClick={() => openEditTeam(member)}
+                                                >
+                                                    <i className="fa-regular fa-pen-to-square"></i>
+                                                </button>
+                                                <button
+                                                    className="btn btn-outline-danger btn-sm"
+                                                    disabled={!perms.can_delete}
+                                                    onClick={async () => {
+                                                        try {
+                                                            await authApi.delete(`/team/${member.id}`);
+                                                            setTeamMembers((prev) => prev.filter((row) => row.id !== member.id));
+                                                        } catch (err) {
+                                                            const errorMessage = err?.response?.data?.message || 'Gagal menghapus team.';
+                                                            await Swal.fire({
+                                                                ...swalDefaults,
+                                                                icon: 'error',
+                                                                title: 'Gagal',
+                                                                text: errorMessage,
+                                                                confirmButtonText: 'OK',
+                                                            });
+                                                        }
+                                                    }}
+                                                >
+                                                    <i className="fa-regular fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {teamMembers.length === 0 && (
+                                    <tr>
+                                        <td colSpan="7" className="text-center text-muted">Belum ada team.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
             {slug === 'news' && (
                 <div className="panel">
                     <div className="section-toolbar">
@@ -828,6 +1047,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                 <tr>
                                     <th>Cover</th>
                                     <th>Judul</th>
+                                    <th>Kategori</th>
                                     <th>Ringkasan</th>
                                     <th>Isi</th>
                                     <th>Status</th>
@@ -854,6 +1074,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             )}
                                         </td>
                                         <td><strong>{post.title}</strong></td>
+                                        <td className="muted">{post.category || '-'}</td>
                                         <td className="muted">{stripHtml(post.summary).slice(0, 120)}</td>
                                         <td className="muted">{stripHtml(post.body).slice(0, 120)}</td>
                                         <td>
@@ -908,7 +1129,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                 ))}
                                 {newsPosts.length === 0 && (
                                     <tr>
-                                        <td colSpan="5" className="text-center text-muted">Belum ada news.</td>
+                                        <td colSpan="8" className="text-center text-muted">Belum ada news.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -916,7 +1137,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                     </div>
                 </div>
             )}
-            {slug !== 'home' && slug !== 'news' && slug !== 'services' && (
+            {slug !== 'home' && slug !== 'news' && slug !== 'services' && slug !== 'team' && (
                 <div className="panel">
                     <div className="section-toolbar">
                         <h3>Konten</h3>
@@ -1215,6 +1436,15 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             required
                                         />
                                     </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Kategori</label>
+                                        <input
+                                            className="form-control"
+                                            value={newsForm.category}
+                                            onChange={(e) => setNewsForm((prev) => ({ ...prev, category: e.target.value }))}
+                                            placeholder="Capital Market, M&A, dll"
+                                        />
+                                    </div>
                                     <div className="col-12">
                                         <label className="form-label">Ringkasan</label>
                                         <div className="quill-shell">
@@ -1302,9 +1532,26 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                     </div>
                                     <div className="col-12">
                                         <label className="form-label">Deskripsi</label>
-                                        <div className="quill-shell">
-                                            <div ref={serviceEditorRef} />
-                                        </div>
+                                        <SunEditor
+                                            setContents={serviceForm.description}
+                                            onChange={(value) => setServiceForm((prev) => ({ ...prev, description: value }))}
+                                            height="220px"
+                                            setOptions={{
+                                                imageUploadUrl: '/api/uploads/editor',
+                                                imageUploadHeader: (() => {
+                                                    const token = localStorage.getItem('auth_token');
+                                                    return token ? { Authorization: `Bearer ${token}` } : {};
+                                                })(),
+                                                buttonList: [
+                                                    ['undo', 'redo'],
+                                                    ['formatBlock', 'bold', 'underline', 'italic', 'strike'],
+                                                    ['fontColor', 'hiliteColor', 'removeFormat'],
+                                                    ['align', 'list', 'outdent', 'indent'],
+                                                    ['table', 'link', 'image', 'video'],
+                                                    ['fullScreen', 'codeView', 'preview'],
+                                                ],
+                                            }}
+                                        />
                                     </div>
                                     <div className="col-md-6">
                                         <label className="form-label">Cover Image</label>
@@ -1327,6 +1574,106 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                                 type="checkbox"
                                                 checked={serviceForm.is_active}
                                                 onChange={(e) => setServiceForm((prev) => ({ ...prev, is_active: e.target.checked }))}
+                                            />
+                                            <label className="form-check-label">Aktif</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" className="btn btn-primary">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div className="modal fade" id="teamModal" tabIndex="-1" aria-hidden="true">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <form onSubmit={handleTeamSubmit}>
+                            <div className="modal-header">
+                                <h5 className="modal-title">{editingTeamId ? 'Edit Team' : 'Tambah Team'}</h5>
+                                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="row g-3">
+                                    <div className="col-md-6">
+                                        <label className="form-label">Nama</label>
+                                        <input
+                                            className="form-control"
+                                            value={teamForm.name}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, name: e.target.value }))}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Jabatan</label>
+                                        <input
+                                            className="form-control"
+                                            value={teamForm.position}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, position: e.target.value }))}
+                                            placeholder="CEO, CFO, dll"
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Urutan</label>
+                                        <input
+                                            className="form-control"
+                                            type="number"
+                                            min="0"
+                                            value={teamForm.sort_order}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, sort_order: Number(e.target.value) }))}
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Facebook</label>
+                                        <input
+                                            className="form-control"
+                                            value={teamForm.facebook_url}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, facebook_url: e.target.value }))}
+                                            placeholder="https://facebook.com/username"
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Twitter</label>
+                                        <input
+                                            className="form-control"
+                                            value={teamForm.twitter_url}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, twitter_url: e.target.value }))}
+                                            placeholder="https://twitter.com/username"
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Instagram</label>
+                                        <input
+                                            className="form-control"
+                                            value={teamForm.instagram_url}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, instagram_url: e.target.value }))}
+                                            placeholder="https://instagram.com/username"
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Foto</label>
+                                        <input
+                                            className="form-control"
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => setTeamImage(e.target.files?.[0] || null)}
+                                        />
+                                        {teamPreviewUrl && (
+                                            <div className="preview-wrap mt-2">
+                                                <img src={teamPreviewUrl} alt="Preview" className="preview-thumb" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="col-md-6 d-flex align-items-center">
+                                        <div className="form-check form-switch mt-4">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                checked={teamForm.is_active}
+                                                onChange={(e) => setTeamForm((prev) => ({ ...prev, is_active: e.target.checked }))}
                                             />
                                             <label className="form-check-label">Aktif</label>
                                         </div>

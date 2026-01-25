@@ -17,4 +17,9 @@ class NavigationMenu extends Model
         'sort_order',
         'is_visible',
     ];
+
+    public function page()
+    {
+        return $this->hasOne(MenuPage::class, 'menu_id');
+    }
 }
