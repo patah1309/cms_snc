@@ -1,11 +1,5 @@
     <!-- Navbar Start -->
     <div class="container-fluid fixed-top px-0 wow fadeIn" data-wow-delay="0.1s">
-        <div class="top-bar row gx-0 align-items-center d-none d-lg-flex">
-            <div class="col-lg-12 px-5 text-end">
-                <small><i class="fa fa-envelope text-gold me-2"></i>{{ $settings?->email ?? 'info@example.com' }}</small>
-            </div>
-        </div>
-
         <nav class="navbar navbar-expand-lg navbar-primary py-lg-0 px-lg-5 wow fadeIn" data-wow-delay="0.1s">
             <a href="/" class="navbar-brand ms-4 ms-lg-0 d-flex align-items-center">
                 @if (!empty($settings?->logo_path))
@@ -49,14 +43,8 @@
                     @endforelse
                 </div>
                 <div class="d-none d-lg-flex ms-2">
-                    <a class="btn btn-light btn-sm-square rounded-circle ms-3" href="">
-                        <small class="fab fa-facebook-f text-gold"></small>
-                    </a>
-                    <a class="btn btn-light btn-sm-square rounded-circle ms-3" href="">
-                        <small class="fab fa-twitter text-gold"></small>
-                    </a>
-                    <a class="btn btn-light btn-sm-square rounded-circle ms-3" href="">
-                        <small class="fab fa-linkedin-in text-gold"></small>
+                    <a class="btn btn-light btn-sm-square rounded-circle ms-3" href="mailto:{{ $settings?->email ?? 'info@example.com' }}">
+                        <small class="fa fa-envelope text-gold"></small>
                     </a>
                 </div>
             </div>

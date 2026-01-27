@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import { ICONS } from '../components/IconMap';
 import { swalDefaults } from '../utils/swal';
@@ -22,6 +22,9 @@ export default function MenuPage({ authApi }) {
     const [urlTouched, setUrlTouched] = useState(false);
     const [pageImage, setPageImage] = useState(null);
     const [pagePreviewUrl, setPagePreviewUrl] = useState(null);
+    const [pageRemoveImage, setPageRemoveImage] = useState(false);
+    const [pageOriginalUrl, setPageOriginalUrl] = useState(null);
+    const pageImageInputRef = useRef(null);
     const [editingMenuId, setEditingMenuId] = useState(null);
 
     const loadMenus = async () => {
@@ -92,6 +95,11 @@ export default function MenuPage({ authApi }) {
         setUrlTouched(false);
         setPageImage(null);
         setPagePreviewUrl(null);
+        setPageRemoveImage(false);
+        setPageOriginalUrl(null);
+        if (pageImageInputRef.current) {
+            pageImageInputRef.current.value = '';
+        }
     };
 
     const openEditMenu = (menu) => {
@@ -110,7 +118,13 @@ export default function MenuPage({ authApi }) {
         setSlugTouched(true);
         setUrlTouched(true);
         setPageImage(null);
-        setPagePreviewUrl(menu.page?.image_path ? `/${menu.page.image_path}` : null);
+        const previewUrl = menu.page?.image_path ? `/${menu.page.image_path}` : null;
+        setPageOriginalUrl(previewUrl);
+        setPagePreviewUrl(previewUrl);
+        setPageRemoveImage(false);
+        if (pageImageInputRef.current) {
+            pageImageInputRef.current.value = '';
+        }
     };
 
     useEffect(() => {
@@ -138,6 +152,9 @@ export default function MenuPage({ authApi }) {
         payload.append('page_body', menuForm.page_body || '');
         if (pageImage) {
             payload.append('page_image', pageImage);
+        }
+        if (editingMenuId && pageRemoveImage) {
+            payload.append('remove_page_image', '1');
         }
         try {
             if (editingMenuId) {
@@ -408,12 +425,48 @@ export default function MenuPage({ authApi }) {
                                             className="form-control"
                                             type="file"
                                             accept="image/*"
-                                            onChange={(e) => setPageImage(e.target.files?.[0] || null)}
+                                            ref={pageImageInputRef}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0] || null;
+                                                setPageImage(file);
+                                                setPageRemoveImage(false);
+                                            }}
                                             disabled={editingHasChildren}
                                         />
                                         {pagePreviewUrl && (
                                             <div className="preview-wrap mt-2">
                                                 <img src={pagePreviewUrl} alt="Preview" className="preview-thumb" />
+                                                {!editingHasChildren && (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary btn-sm mt-2"
+                                                        onClick={() => {
+                                                            if (editingMenuId) {
+                                                                if (pageImage) {
+                                                                    setPageImage(null);
+                                                                    setPagePreviewUrl(pageOriginalUrl);
+                                                                    if (pageImageInputRef.current) {
+                                                                        pageImageInputRef.current.value = '';
+                                                                    }
+                                                                    return;
+                                                                }
+                                                                setPageRemoveImage(true);
+                                                                setPagePreviewUrl(null);
+                                                                if (pageImageInputRef.current) {
+                                                                    pageImageInputRef.current.value = '';
+                                                                }
+                                                                return;
+                                                            }
+                                                            setPageImage(null);
+                                                            setPagePreviewUrl(null);
+                                                            if (pageImageInputRef.current) {
+                                                                pageImageInputRef.current.value = '';
+                                                            }
+                                                        }}
+                                                    >
+                                                        {editingMenuId && pageImage ? 'Batalkan gambar baru' : 'Hapus gambar'}
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>

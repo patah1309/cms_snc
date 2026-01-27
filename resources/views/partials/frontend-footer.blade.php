@@ -3,7 +3,7 @@
         <div class="container py-5">
             <div class="row g-5">
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="text-white mb-4">&nbsp;</h4>
+                    <h4 class="text-white mb-4">Contact Us</h4>
                     <p class="mb-2"><i class="fa fa-envelope me-3"></i>{{ $settings?->email ?? 'info@example.com' }}</p>
                 </div>
                 <div class="col-lg-3 col-md-6">

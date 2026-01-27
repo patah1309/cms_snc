@@ -73,20 +73,28 @@ class TeamMemberController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'max:4096'],
+            'remove_photo' => ['nullable', 'boolean'],
         ]);
 
+        $photoPath = $member->photo_path;
+        if ($request->boolean('remove_photo')) {
+            if ($member->photo_path) {
+                $this->deletePublicImage($member->photo_path);
+            }
+            $photoPath = null;
+        }
         if ($request->hasFile('photo')) {
             if ($member->photo_path) {
                 $this->deletePublicImage($member->photo_path);
             }
-            $validated['photo_path'] = $this->storePublicImage($request->file('photo'));
+            $photoPath = $this->storePublicImage($request->file('photo'));
         }
 
         $member->update([
             'name' => $validated['name'],
             'position' => $validated['position'] ?? null,
             'description' => $validated['description'] ?? null,
-            'photo_path' => $validated['photo_path'] ?? $member->photo_path,
+            'photo_path' => $photoPath,
             'sort_order' => $validated['sort_order'] ?? $member->sort_order,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $member->is_active,
         ]);

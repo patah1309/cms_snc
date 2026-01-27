@@ -29,6 +29,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     });
     const [carouselImage, setCarouselImage] = useState(null);
     const [carouselPreviewUrl, setCarouselPreviewUrl] = useState(null);
+    const [carouselRemoveImage, setCarouselRemoveImage] = useState(false);
+    const [carouselOriginalUrl, setCarouselOriginalUrl] = useState(null);
+    const carouselImageInputRef = useRef(null);
     const [carouselEditingId, setCarouselEditingId] = useState(null);
     const [carouselEditingForm, setCarouselEditingForm] = useState({});
     const [carouselEditingImage, setCarouselEditingImage] = useState(null);
@@ -50,6 +53,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     const bodyQuillRef = useRef(null);
     const [newsImage, setNewsImage] = useState(null);
     const [newsPreviewUrl, setNewsPreviewUrl] = useState(null);
+    const [newsRemoveImage, setNewsRemoveImage] = useState(false);
+    const [newsOriginalUrl, setNewsOriginalUrl] = useState(null);
+    const newsImageInputRef = useRef(null);
     const [editingNewsId, setEditingNewsId] = useState(null);
     const [newsSlugTouched, setNewsSlugTouched] = useState(false);
     const [serviceItems, setServiceItems] = useState([]);
@@ -61,6 +67,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     });
     const [serviceImage, setServiceImage] = useState(null);
     const [servicePreviewUrl, setServicePreviewUrl] = useState(null);
+    const [serviceRemoveImage, setServiceRemoveImage] = useState(false);
+    const [serviceOriginalUrl, setServiceOriginalUrl] = useState(null);
+    const serviceImageInputRef = useRef(null);
     const [editingServiceId, setEditingServiceId] = useState(null);
     const [teamMembers, setTeamMembers] = useState([]);
     const [teamForm, setTeamForm] = useState({
@@ -72,6 +81,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     });
     const [teamImage, setTeamImage] = useState(null);
     const [teamPreviewUrl, setTeamPreviewUrl] = useState(null);
+    const [teamRemoveImage, setTeamRemoveImage] = useState(false);
+    const [teamOriginalUrl, setTeamOriginalUrl] = useState(null);
+    const teamImageInputRef = useRef(null);
     const [editingTeamId, setEditingTeamId] = useState(null);
 
     if (!menu) {
@@ -234,6 +246,11 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         setCarouselImage(null);
         setCarouselPreviewUrl(null);
+        setCarouselRemoveImage(false);
+        setCarouselOriginalUrl(null);
+        if (carouselImageInputRef.current) {
+            carouselImageInputRef.current.value = '';
+        }
     };
 
     const resetNewsForm = () => {
@@ -248,8 +265,13 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         setNewsImage(null);
         setNewsPreviewUrl(null);
+        setNewsRemoveImage(false);
+        setNewsOriginalUrl(null);
         setEditingNewsId(null);
         setNewsSlugTouched(false);
+        if (newsImageInputRef.current) {
+            newsImageInputRef.current.value = '';
+        }
     };
 
     const resetServiceForm = () => {
@@ -261,7 +283,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         setServiceImage(null);
         setServicePreviewUrl(null);
+        setServiceRemoveImage(false);
+        setServiceOriginalUrl(null);
         setEditingServiceId(null);
+        if (serviceImageInputRef.current) {
+            serviceImageInputRef.current.value = '';
+        }
     };
 
     const resetTeamForm = () => {
@@ -274,7 +301,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         setTeamImage(null);
         setTeamPreviewUrl(null);
+        setTeamRemoveImage(false);
+        setTeamOriginalUrl(null);
         setEditingTeamId(null);
+        if (teamImageInputRef.current) {
+            teamImageInputRef.current.value = '';
+        }
     };
 
     const normalizeCarouselButtons = (buttons, fallbackLabel, fallbackUrl) => {
@@ -343,7 +375,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
             is_active: !!slide.is_active,
         });
         setCarouselEditingImage(null);
+        setCarouselOriginalUrl(slide.image_url || null);
         setCarouselEditingPreviewUrl(slide.image_url || null);
+        setCarouselRemoveImage(false);
+        if (carouselImageInputRef.current) {
+            carouselImageInputRef.current.value = '';
+        }
     };
 
     const handleCarouselUpdate = async (e) => {
@@ -358,6 +395,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         if (carouselEditingImage) {
             payload.append('image', carouselEditingImage);
         }
+        if (carouselRemoveImage) {
+            payload.append('remove_image', '1');
+        }
         payload.append('_method', 'PUT');
         try {
             const res = await authApi.post(`/home/carousels/${carouselEditingId}`, payload, {
@@ -371,6 +411,11 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
             setCarouselEditingForm({});
             setCarouselEditingImage(null);
             setCarouselEditingPreviewUrl(null);
+            setCarouselRemoveImage(false);
+            setCarouselOriginalUrl(null);
+            if (carouselImageInputRef.current) {
+                carouselImageInputRef.current.value = '';
+            }
             const modalEl = document.getElementById('carouselModal');
             if (window.bootstrap && modalEl) {
                 window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
@@ -454,7 +499,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
             published_at: publishedAt,
         });
         setNewsImage(null);
+        setNewsOriginalUrl(post.cover_url || null);
         setNewsPreviewUrl(post.cover_url || null);
+        setNewsRemoveImage(false);
+        if (newsImageInputRef.current) {
+            newsImageInputRef.current.value = '';
+        }
     };
 
     const toSlug = (value) => {
@@ -477,6 +527,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         if (newsImage) {
             payload.append('cover_image', newsImage);
+        }
+        if (editingNewsId && newsRemoveImage) {
+            payload.append('remove_cover_image', '1');
         }
         if (editingNewsId) {
             payload.append('_method', 'PUT');
@@ -523,7 +576,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
             is_active: !!item.is_active,
         });
         setServiceImage(null);
+        setServiceOriginalUrl(item.cover_url || null);
         setServicePreviewUrl(item.cover_url || null);
+        setServiceRemoveImage(false);
+        if (serviceImageInputRef.current) {
+            serviceImageInputRef.current.value = '';
+        }
     };
 
     const handleServiceSubmit = async (e) => {
@@ -538,6 +596,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         if (serviceImage) {
             payload.append('cover_image', serviceImage);
+        }
+        if (editingServiceId && serviceRemoveImage) {
+            payload.append('remove_cover_image', '1');
         }
         if (editingServiceId) {
             payload.append('_method', 'PUT');
@@ -585,7 +646,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
             is_active: !!member.is_active,
         });
         setTeamImage(null);
+        setTeamOriginalUrl(member.photo_url || null);
         setTeamPreviewUrl(member.photo_url || null);
+        setTeamRemoveImage(false);
+        if (teamImageInputRef.current) {
+            teamImageInputRef.current.value = '';
+        }
     };
 
     const handleTeamSubmit = async (e) => {
@@ -600,6 +666,9 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         });
         if (teamImage) {
             payload.append('photo', teamImage);
+        }
+        if (editingTeamId && teamRemoveImage) {
+            payload.append('remove_photo', '1');
         }
         if (editingTeamId) {
             payload.append('_method', 'PUT');
@@ -1414,10 +1483,12 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             className="form-control"
                                             type="file"
                                             accept="image/*"
+                                            ref={carouselImageInputRef}
                                             onChange={(e) => {
                                                 const file = e.target.files?.[0] || null;
                                                 if (carouselEditingId) {
                                                     setCarouselEditingImage(file);
+                                                    setCarouselRemoveImage(false);
                                                 } else {
                                                     setCarouselImage(file);
                                                 }
@@ -1430,6 +1501,40 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                                     alt="Preview"
                                                     className="preview-thumb"
                                                 />
+                                                {carouselEditingId ? (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary btn-sm mt-2"
+                                                        onClick={() => {
+                                                            if (carouselEditingImage) {
+                                                                setCarouselEditingImage(null);
+                                                                setCarouselEditingPreviewUrl(carouselOriginalUrl);
+                                                                if (carouselImageInputRef.current) {
+                                                                    carouselImageInputRef.current.value = '';
+                                                                }
+                                                                return;
+                                                            }
+                                                            setCarouselRemoveImage(true);
+                                                            setCarouselEditingPreviewUrl(null);
+                                                        }}
+                                                    >
+                                                        {carouselEditingImage ? 'Batalkan gambar baru' : 'Hapus gambar'}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary btn-sm mt-2"
+                                                        onClick={() => {
+                                                            setCarouselImage(null);
+                                                            setCarouselPreviewUrl(null);
+                                                            if (carouselImageInputRef.current) {
+                                                                carouselImageInputRef.current.value = '';
+                                                            }
+                                                        }}
+                                                    >
+                                                        Hapus gambar
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -1546,11 +1651,45 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             className="form-control"
                                             type="file"
                                             accept="image/*"
-                                            onChange={(e) => setNewsImage(e.target.files?.[0] || null)}
+                                            ref={newsImageInputRef}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0] || null;
+                                                setNewsImage(file);
+                                                setNewsRemoveImage(false);
+                                            }}
                                         />
                                         {newsPreviewUrl && (
                                             <div className="preview-wrap mt-2">
                                                 <img src={newsPreviewUrl} alt="Preview" className="preview-thumb" />
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-sm mt-2"
+                                                    onClick={() => {
+                                                        if (editingNewsId) {
+                                                            if (newsImage) {
+                                                                setNewsImage(null);
+                                                                setNewsPreviewUrl(newsOriginalUrl);
+                                                                if (newsImageInputRef.current) {
+                                                                    newsImageInputRef.current.value = '';
+                                                                }
+                                                                return;
+                                                            }
+                                                            setNewsRemoveImage(true);
+                                                            setNewsPreviewUrl(null);
+                                                            if (newsImageInputRef.current) {
+                                                                newsImageInputRef.current.value = '';
+                                                            }
+                                                            return;
+                                                        }
+                                                        setNewsImage(null);
+                                                        setNewsPreviewUrl(null);
+                                                        if (newsImageInputRef.current) {
+                                                            newsImageInputRef.current.value = '';
+                                                        }
+                                                    }}
+                                                >
+                                                    {editingNewsId && newsImage ? 'Batalkan gambar baru' : 'Hapus gambar'}
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -1622,11 +1761,45 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             className="form-control"
                                             type="file"
                                             accept="image/*"
-                                            onChange={(e) => setServiceImage(e.target.files?.[0] || null)}
+                                            ref={serviceImageInputRef}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0] || null;
+                                                setServiceImage(file);
+                                                setServiceRemoveImage(false);
+                                            }}
                                         />
                                         {servicePreviewUrl && (
                                             <div className="preview-wrap mt-2">
                                                 <img src={servicePreviewUrl} alt="Preview" className="preview-thumb" />
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-sm mt-2"
+                                                    onClick={() => {
+                                                        if (editingServiceId) {
+                                                            if (serviceImage) {
+                                                                setServiceImage(null);
+                                                                setServicePreviewUrl(serviceOriginalUrl);
+                                                                if (serviceImageInputRef.current) {
+                                                                    serviceImageInputRef.current.value = '';
+                                                                }
+                                                                return;
+                                                            }
+                                                            setServiceRemoveImage(true);
+                                                            setServicePreviewUrl(null);
+                                                            if (serviceImageInputRef.current) {
+                                                                serviceImageInputRef.current.value = '';
+                                                            }
+                                                            return;
+                                                        }
+                                                        setServiceImage(null);
+                                                        setServicePreviewUrl(null);
+                                                        if (serviceImageInputRef.current) {
+                                                            serviceImageInputRef.current.value = '';
+                                                        }
+                                                    }}
+                                                >
+                                                    {editingServiceId && serviceImage ? 'Batalkan gambar baru' : 'Hapus gambar'}
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -1705,11 +1878,45 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             className="form-control"
                                             type="file"
                                             accept="image/*"
-                                            onChange={(e) => setTeamImage(e.target.files?.[0] || null)}
+                                            ref={teamImageInputRef}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0] || null;
+                                                setTeamImage(file);
+                                                setTeamRemoveImage(false);
+                                            }}
                                         />
                                         {teamPreviewUrl && (
                                             <div className="preview-wrap mt-2">
                                                 <img src={teamPreviewUrl} alt="Preview" className="preview-thumb" />
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-sm mt-2"
+                                                    onClick={() => {
+                                                        if (editingTeamId) {
+                                                            if (teamImage) {
+                                                                setTeamImage(null);
+                                                                setTeamPreviewUrl(teamOriginalUrl);
+                                                                if (teamImageInputRef.current) {
+                                                                    teamImageInputRef.current.value = '';
+                                                                }
+                                                                return;
+                                                            }
+                                                            setTeamRemoveImage(true);
+                                                            setTeamPreviewUrl(null);
+                                                            if (teamImageInputRef.current) {
+                                                                teamImageInputRef.current.value = '';
+                                                            }
+                                                            return;
+                                                        }
+                                                        setTeamImage(null);
+                                                        setTeamPreviewUrl(null);
+                                                        if (teamImageInputRef.current) {
+                                                            teamImageInputRef.current.value = '';
+                                                        }
+                                                    }}
+                                                >
+                                                    {editingTeamId && teamImage ? 'Batalkan gambar baru' : 'Hapus gambar'}
+                                                </button>
                                             </div>
                                         )}
                                     </div>

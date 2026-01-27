@@ -55,10 +55,10 @@
                     <div class="carousel-caption">
                         <div class="container hero-content">
                             <div class="row justify-content-start">
-                                <div class="col-lg-8">
+                                <div class="col-lg-9">
                                     <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3 animated slideInDown hero-pill"> Capital Market - M&A - Restructuring </p>
                                     <h1 class="mb-3 animated slideInDown hero-title text-white"> Strategic Financial Advisory for Sustainable Growth </h1>
-                                    <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 760px;"> End-to-end advisory across IPO readiness, corporate actions, M&A, and restructuring-focused on value creation for clients, shareholders, and stakeholders. </p>
+                                    <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 900px;"> End-to-end advisory across IPO readiness, corporate actions, M&A, and restructuring-focused on value creation for clients, shareholders, and stakeholders. </p>
                                     <div class="d-flex flex-wrap gap-2 animated slideInDown">
                                         <a href="#services" class="btn btn-primary py-3 px-5"> Our Services </a>
                                         <a href="https://wa.me/62812xxxxxxx?text=Hello%20Satu%20Nusa%20Capital,%20I%20would%20like%20to%20request%20a%20consultation." class="btn btn-whatsapp py-3 px-5" target="_blank" rel="noopener">
@@ -86,10 +86,10 @@
                     <div class="carousel-caption">
                         <div class="container hero-content">
                             <div class="row justify-content-start">
-                                <div class="col-lg-7">
+                                <div class="col-lg-8">
                                     <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3 animated slideInDown hero-pill"> IPO Insight </p>
                                     <h2 class="mb-3 animated slideInDown hero-title text-white"> From Pre-IPO Preparation to Post-IPO Execution </h2>
-                                    <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 720px;"> Insights covering IPO background, benefits, tax incentives, IDX listing requirements, e-IPO mechanism, restructuring preparation, and an illustrative IPO timeline. </p>
+                                    <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 900px;"> Insights covering IPO background, benefits, tax incentives, IDX listing requirements, e-IPO mechanism, restructuring preparation, and an illustrative IPO timeline. </p>
                                     <div class="d-flex flex-wrap gap-2 animated slideInDown">
                                         <a href="ipo-insight.html" class="btn btn-primary py-3 px-5"> Explore IPO Insight </a>
                                         <a href="#news" class="btn btn-outline-light py-3 px-5"> Read News </a>

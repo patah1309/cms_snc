@@ -57,9 +57,9 @@
                         <div class="carousel-caption">
                             <div class="container hero-content">
                                 <div class="row justify-content-start">
-                                    <div class="col-lg-8">
+                                    <div class="col-lg-8 hero-col">
                                         <h1 class="mb-3 hero-title text-white">{{ $slideTitle }}</h1>
-                                        <div class="mb-4 hero-lead text-white" style="max-width: 760px;">
+                                        <div class="mb-4 hero-lead text-white" style="max-width: 900px;">
                                             {!! $slideDescription !!}
                                         </div>
                                         <div class="d-flex flex-wrap gap-2">

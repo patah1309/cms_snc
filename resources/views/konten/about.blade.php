@@ -29,7 +29,7 @@
                     </p> -->
                     <div class="border rounded-3 p-4 shadow-sm bg-white">
                         <nav>
-                            <div class="nav nav-tabs nav-fill mb-4 border-bottom" id="nav-tab" role="tablist">
+                            <div class="nav nav-tabs nav-fill mb-4 border-bottom about-tabs" id="nav-tab" role="tablist">
                                 <button class="nav-link fw-semibold active" id="nav-story-tab" data-bs-toggle="tab"
                                     data-bs-target="#nav-story" type="button" role="tab" aria-selected="true">
                                     About Us

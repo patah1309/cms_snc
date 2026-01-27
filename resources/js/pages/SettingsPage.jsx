@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
-import Quill from 'quill';
+import SunEditor from 'suneditor-react';
+import 'suneditor/dist/css/suneditor.min.css';
 import { ICONS } from '../components/IconMap';
 import { swalDefaults } from '../utils/swal';
 
@@ -26,12 +27,6 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
     const [seoOgPreview, setSeoOgPreview] = useState(null);
     const [seoOgRemoved, setSeoOgRemoved] = useState(false);
     const seoOgInputRef = useRef(null);
-    const aboutEditorRef = useRef(null);
-    const coreValuesEditorRef = useRef(null);
-    const approachEditorRef = useRef(null);
-    const aboutQuillRef = useRef(null);
-    const coreValuesQuillRef = useRef(null);
-    const approachQuillRef = useRef(null);
     const [headerFiles, setHeaderFiles] = useState({
         home: null,
         about: null,
@@ -139,61 +134,6 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
     }, [menuHeaderUploads]);
 
     useEffect(() => {
-        if (loading) return;
-        if (aboutEditorRef.current && !aboutQuillRef.current) {
-            aboutQuillRef.current = new Quill(aboutEditorRef.current, {
-                theme: 'snow',
-                placeholder: 'Tulis About Us...',
-            });
-            aboutQuillRef.current.on('text-change', () => {
-                const html = aboutQuillRef.current.root.innerHTML;
-                setForm((prev) => ({ ...prev, about_us: html }));
-            });
-        }
-        if (coreValuesEditorRef.current && !coreValuesQuillRef.current) {
-            coreValuesQuillRef.current = new Quill(coreValuesEditorRef.current, {
-                theme: 'snow',
-                placeholder: 'Tulis Our Core Values...',
-            });
-            coreValuesQuillRef.current.on('text-change', () => {
-                const html = coreValuesQuillRef.current.root.innerHTML;
-                setForm((prev) => ({ ...prev, core_values: html }));
-            });
-        }
-        if (approachEditorRef.current && !approachQuillRef.current) {
-            approachQuillRef.current = new Quill(approachEditorRef.current, {
-                theme: 'snow',
-                placeholder: 'Tulis Our Approach...',
-            });
-            approachQuillRef.current.on('text-change', () => {
-                const html = approachQuillRef.current.root.innerHTML;
-                setForm((prev) => ({ ...prev, approach: html }));
-            });
-        }
-    }, [loading]);
-
-    useEffect(() => {
-        if (aboutQuillRef.current) {
-            const current = aboutQuillRef.current.root.innerHTML;
-            if (current !== (form.about_us || '')) {
-                aboutQuillRef.current.root.innerHTML = form.about_us || '';
-            }
-        }
-        if (coreValuesQuillRef.current) {
-            const current = coreValuesQuillRef.current.root.innerHTML;
-            if (current !== (form.core_values || '')) {
-                coreValuesQuillRef.current.root.innerHTML = form.core_values || '';
-            }
-        }
-        if (approachQuillRef.current) {
-            const current = approachQuillRef.current.root.innerHTML;
-            if (current !== (form.approach || '')) {
-                approachQuillRef.current.root.innerHTML = form.approach || '';
-            }
-        }
-    }, [form.about_us, form.approach, form.core_values]);
-
-    useEffect(() => {
         const next = {};
         Object.entries(headerFiles).forEach(([key, file]) => {
             if (file) {
@@ -262,15 +202,6 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
         e.preventDefault();
         const payload = new FormData();
         Object.entries(form).forEach(([key, value]) => payload.append(key, value));
-        if (aboutQuillRef.current) {
-            payload.set('about_us', aboutQuillRef.current.root.innerHTML || '');
-        }
-        if (coreValuesQuillRef.current) {
-            payload.set('core_values', coreValuesQuillRef.current.root.innerHTML || '');
-        }
-        if (approachQuillRef.current) {
-            payload.set('approach', approachQuillRef.current.root.innerHTML || '');
-        }
         if (logoFile) {
             payload.append('logo', logoFile);
         }
@@ -458,19 +389,76 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
                         <label>
                             About Us
                             <div className="quill-shell">
-                                <div ref={aboutEditorRef} />
+                                <SunEditor
+                                    setContents={form.about_us}
+                                    onChange={(value) => updateField('about_us', value)}
+                                    height="240px"
+                                    setOptions={{
+                                        imageUploadUrl: '/api/uploads/editor',
+                                        imageUploadHeader: (() => {
+                                            const token = localStorage.getItem('auth_token');
+                                            return token ? { Authorization: `Bearer ${token}` } : {};
+                                        })(),
+                                        buttonList: [
+                                            ['undo', 'redo'],
+                                            ['formatBlock', 'bold', 'underline', 'italic', 'strike'],
+                                            ['fontColor', 'hiliteColor', 'removeFormat'],
+                                            ['align', 'list', 'outdent', 'indent'],
+                                            ['table', 'link', 'image', 'video'],
+                                            ['fullScreen', 'codeView', 'preview'],
+                                        ],
+                                    }}
+                                />
                             </div>
                         </label>
                         <label>
                             Our Core Values
                             <div className="quill-shell">
-                                <div ref={coreValuesEditorRef} />
+                                <SunEditor
+                                    setContents={form.core_values}
+                                    onChange={(value) => updateField('core_values', value)}
+                                    height="240px"
+                                    setOptions={{
+                                        imageUploadUrl: '/api/uploads/editor',
+                                        imageUploadHeader: (() => {
+                                            const token = localStorage.getItem('auth_token');
+                                            return token ? { Authorization: `Bearer ${token}` } : {};
+                                        })(),
+                                        buttonList: [
+                                            ['undo', 'redo'],
+                                            ['formatBlock', 'bold', 'underline', 'italic', 'strike'],
+                                            ['fontColor', 'hiliteColor', 'removeFormat'],
+                                            ['align', 'list', 'outdent', 'indent'],
+                                            ['table', 'link', 'image', 'video'],
+                                            ['fullScreen', 'codeView', 'preview'],
+                                        ],
+                                    }}
+                                />
                             </div>
                         </label>
                         <label>
                             Our Approach
                             <div className="quill-shell">
-                                <div ref={approachEditorRef} />
+                                <SunEditor
+                                    setContents={form.approach}
+                                    onChange={(value) => updateField('approach', value)}
+                                    height="240px"
+                                    setOptions={{
+                                        imageUploadUrl: '/api/uploads/editor',
+                                        imageUploadHeader: (() => {
+                                            const token = localStorage.getItem('auth_token');
+                                            return token ? { Authorization: `Bearer ${token}` } : {};
+                                        })(),
+                                        buttonList: [
+                                            ['undo', 'redo'],
+                                            ['formatBlock', 'bold', 'underline', 'italic', 'strike'],
+                                            ['fontColor', 'hiliteColor', 'removeFormat'],
+                                            ['align', 'list', 'outdent', 'indent'],
+                                            ['table', 'link', 'image', 'video'],
+                                            ['fullScreen', 'codeView', 'preview'],
+                                        ],
+                                    }}
+                                />
                             </div>
                         </label>
                         <label>

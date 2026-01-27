@@ -47,6 +47,7 @@ class NavigationMenuController extends Controller
             'page_title' => ['nullable', 'string', 'max:255'],
             'page_body' => ['nullable', 'string'],
             'page_image' => ['nullable', 'image', 'max:4096'],
+            'remove_page_image' => ['nullable', 'boolean'],
         ]);
 
         $menu = NavigationMenu::create([
@@ -80,6 +81,7 @@ class NavigationMenuController extends Controller
             'page_title' => ['nullable', 'string', 'max:255'],
             'page_body' => ['nullable', 'string'],
             'page_image' => ['nullable', 'image', 'max:4096'],
+            'remove_page_image' => ['nullable', 'boolean'],
         ]);
 
         $menu->update([
@@ -161,6 +163,13 @@ class NavigationMenuController extends Controller
             'title' => $this->nullIfEmpty($validated['page_title'] ?? null),
             'body' => $this->nullIfEmpty($validated['page_body'] ?? null),
         ];
+
+        if ($request->boolean('remove_page_image')) {
+            if ($menu->page?->image_path) {
+                $this->deletePublicImage($menu->page->image_path);
+            }
+            $data['image_path'] = null;
+        }
 
         if ($request->hasFile('page_image')) {
             if ($menu->page?->image_path) {

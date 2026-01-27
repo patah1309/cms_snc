@@ -85,13 +85,21 @@ class NewsPostController extends Controller
             'status' => ['required', 'string', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
             'cover_image' => ['nullable', 'image', 'max:4096'],
+            'remove_cover_image' => ['nullable', 'boolean'],
         ]);
 
+        $coverImagePath = $post->cover_image_path;
+        if ($request->boolean('remove_cover_image')) {
+            if ($post->cover_image_path) {
+                $this->deletePublicImage($post->cover_image_path);
+            }
+            $coverImagePath = null;
+        }
         if ($request->hasFile('cover_image')) {
             if ($post->cover_image_path) {
                 $this->deletePublicImage($post->cover_image_path);
             }
-            $validated['cover_image_path'] = $this->storePublicImage($request->file('cover_image'));
+            $coverImagePath = $this->storePublicImage($request->file('cover_image'));
         }
 
         if ($validated['status'] === 'published' && empty($validated['published_at'])) {
@@ -106,7 +114,7 @@ class NewsPostController extends Controller
             'body' => $validated['body'] ?? null,
             'status' => $validated['status'],
             'published_at' => $validated['published_at'] ?? null,
-            'cover_image_path' => $validated['cover_image_path'] ?? $post->cover_image_path,
+            'cover_image_path' => $coverImagePath,
         ]);
 
         return response()->json(['post' => $this->transform($post)]);

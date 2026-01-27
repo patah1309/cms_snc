@@ -93,13 +93,21 @@ class HomeCarouselController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['nullable', 'image', 'max:4096'],
+            'remove_image' => ['nullable', 'boolean'],
         ]);
 
+        $imagePath = $slide->image_path;
+        if ($request->boolean('remove_image')) {
+            if ($slide->image_path) {
+                $this->deletePublicImage($slide->image_path);
+            }
+            $imagePath = null;
+        }
         if ($request->hasFile('image')) {
             if ($slide->image_path) {
                 $this->deletePublicImage($slide->image_path);
             }
-            $validated['image_path'] = $this->storePublicImage($request->file('image'));
+            $imagePath = $this->storePublicImage($request->file('image'));
         }
 
         $buttons = array_key_exists('buttons', $validated) ? $validated['buttons'] : $slide->buttons;
@@ -122,7 +130,7 @@ class HomeCarouselController extends Controller
             'buttons' => $buttons,
             'sort_order' => $validated['sort_order'] ?? $slide->sort_order,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $slide->is_active,
-            'image_path' => $validated['image_path'] ?? $slide->image_path,
+            'image_path' => $imagePath,
         ]);
         $slide->save();
 

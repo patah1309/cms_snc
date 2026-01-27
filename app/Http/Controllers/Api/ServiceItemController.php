@@ -70,13 +70,21 @@ class ServiceItemController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'cover_image' => ['nullable', 'image', 'max:4096'],
+            'remove_cover_image' => ['nullable', 'boolean'],
         ]);
 
+        $coverImagePath = $item->cover_image_path;
+        if ($request->boolean('remove_cover_image')) {
+            if ($item->cover_image_path) {
+                $this->deletePublicImage($item->cover_image_path);
+            }
+            $coverImagePath = null;
+        }
         if ($request->hasFile('cover_image')) {
             if ($item->cover_image_path) {
                 $this->deletePublicImage($item->cover_image_path);
             }
-            $validated['cover_image_path'] = $this->storePublicImage($request->file('cover_image'));
+            $coverImagePath = $this->storePublicImage($request->file('cover_image'));
         }
 
         $item->update([
@@ -84,7 +92,7 @@ class ServiceItemController extends Controller
             'description' => $validated['description'] ?? null,
             'sort_order' => $validated['sort_order'] ?? $item->sort_order,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $item->is_active,
-            'cover_image_path' => $validated['cover_image_path'] ?? $item->cover_image_path,
+            'cover_image_path' => $coverImagePath,
         ]);
 
         return response()->json(['item' => $this->transform($item)]);
