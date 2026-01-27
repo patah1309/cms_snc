@@ -42,6 +42,9 @@ class HomeCarouselController extends Controller
             'description' => ['nullable', 'string'],
             'button_label' => ['nullable', 'string', 'max:100'],
             'button_url' => ['nullable', 'string', 'max:255'],
+            'buttons' => ['nullable', 'array'],
+            'buttons.*.label' => ['nullable', 'string', 'max:100'],
+            'buttons.*.url' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -51,11 +54,20 @@ class HomeCarouselController extends Controller
             $validated['image_path'] = $this->storePublicImage($request->file('image'));
         }
 
+        $buttons = $validated['buttons'] ?? null;
+        if (!$buttons && !empty($validated['button_label']) && !empty($validated['button_url'])) {
+            $buttons = [[
+                'label' => $validated['button_label'],
+                'url' => $validated['button_url'],
+            ]];
+        }
+
         $slide = HomeCarouselSlide::create([
             'title' => $validated['title'] ?? null,
             'description' => $validated['description'] ?? null,
             'button_label' => $validated['button_label'] ?? null,
             'button_url' => $validated['button_url'] ?? null,
+            'buttons' => $buttons,
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_active' => $request->boolean('is_active', true),
             'image_path' => $validated['image_path'] ?? null,
@@ -75,6 +87,9 @@ class HomeCarouselController extends Controller
             'description' => ['nullable', 'string'],
             'button_label' => ['nullable', 'string', 'max:100'],
             'button_url' => ['nullable', 'string', 'max:255'],
+            'buttons' => ['nullable', 'array'],
+            'buttons.*.label' => ['nullable', 'string', 'max:100'],
+            'buttons.*.url' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -87,11 +102,24 @@ class HomeCarouselController extends Controller
             $validated['image_path'] = $this->storePublicImage($request->file('image'));
         }
 
+        $buttons = array_key_exists('buttons', $validated) ? $validated['buttons'] : $slide->buttons;
+        if (array_key_exists('button_label', $validated) || array_key_exists('button_url', $validated)) {
+            if (!empty($validated['button_label']) && !empty($validated['button_url'])) {
+                $buttons = [[
+                    'label' => $validated['button_label'],
+                    'url' => $validated['button_url'],
+                ]];
+            } elseif (array_key_exists('buttons', $validated)) {
+                $buttons = $validated['buttons'];
+            }
+        }
+
         $slide->fill([
             'title' => $validated['title'] ?? $slide->title,
             'description' => $validated['description'] ?? $slide->description,
             'button_label' => $validated['button_label'] ?? $slide->button_label,
             'button_url' => $validated['button_url'] ?? $slide->button_url,
+            'buttons' => $buttons,
             'sort_order' => $validated['sort_order'] ?? $slide->sort_order,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $slide->is_active,
             'image_path' => $validated['image_path'] ?? $slide->image_path,
@@ -117,12 +145,21 @@ class HomeCarouselController extends Controller
 
     private function transform(HomeCarouselSlide $slide): array
     {
+        $buttons = $slide->buttons;
+        if (!$buttons && $slide->button_label && $slide->button_url) {
+            $buttons = [[
+                'label' => $slide->button_label,
+                'url' => $slide->button_url,
+            ]];
+        }
+
         return [
             'id' => $slide->id,
             'title' => $slide->title,
             'description' => $slide->description,
             'button_label' => $slide->button_label,
             'button_url' => $slide->button_url,
+            'buttons' => $buttons,
             'sort_order' => $slide->sort_order,
             'is_active' => (bool) $slide->is_active,
             'image_url' => $slide->image_path ? url($slide->image_path) : null,

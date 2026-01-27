@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ServiceItemController;
 use App\Http\Controllers\Api\TeamMemberController;
 use App\Http\Controllers\Api\EditorUploadController;
 use App\Http\Controllers\Api\ContactMessageController;
+use App\Http\Controllers\Api\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/menus', [NavigationMenuController::class, 'index']);
     Route::post('/menus', [NavigationMenuController::class, 'store']);
     Route::put('/menus/{menu}', [NavigationMenuController::class, 'update']);
+    Route::post('/menus/{menu}/header', [NavigationMenuController::class, 'updateHeader']);
     Route::delete('/menus/{menu}', [NavigationMenuController::class, 'destroy']);
     Route::get('/admin/users', [UserManagementController::class, 'index']);
     Route::post('/admin/users', [UserManagementController::class, 'store']);
@@ -75,5 +77,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/team/{member}', [TeamMemberController::class, 'destroy']);
     Route::get('/contacts', [ContactMessageController::class, 'index']);
     Route::delete('/contacts/{message}', [ContactMessageController::class, 'destroy']);
+    Route::get('/reports/monthly', [ReportController::class, 'monthly']);
     Route::post('/uploads/editor', [EditorUploadController::class, 'store']);
 });

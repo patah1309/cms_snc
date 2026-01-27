@@ -23,8 +23,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     const [carouselForm, setCarouselForm] = useState({
         title: '',
         description: '',
-        button_label: '',
-        button_url: '',
+        buttons: [{ label: '', url: '' }],
         sort_order: 0,
         is_active: true,
     });
@@ -67,9 +66,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
     const [teamForm, setTeamForm] = useState({
         name: '',
         position: '',
-        facebook_url: '',
-        twitter_url: '',
-        instagram_url: '',
+        description: '',
         sort_order: 0,
         is_active: true,
     });
@@ -231,8 +228,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setCarouselForm({
             title: '',
             description: '',
-            button_label: '',
-            button_url: '',
+            buttons: [{ label: '', url: '' }],
             sort_order: 0,
             is_active: true,
         });
@@ -272,9 +268,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setTeamForm({
             name: '',
             position: '',
-            facebook_url: '',
-            twitter_url: '',
-            instagram_url: '',
+            description: '',
             sort_order: 0,
             is_active: true,
         });
@@ -283,16 +277,37 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setEditingTeamId(null);
     };
 
+    const normalizeCarouselButtons = (buttons, fallbackLabel, fallbackUrl) => {
+        if (Array.isArray(buttons) && buttons.length > 0) {
+            return buttons.map((button) => ({
+                label: button?.label || '',
+                url: button?.url || '',
+            }));
+        }
+        if (fallbackLabel || fallbackUrl) {
+            return [{ label: fallbackLabel || '', url: fallbackUrl || '' }];
+        }
+        return [{ label: '', url: '' }];
+    };
+
+    const appendCarouselButtons = (payload, buttons) => {
+        if (!Array.isArray(buttons)) return;
+        buttons
+            .filter((button) => button.label || button.url)
+            .forEach((button, index) => {
+                payload.append(`buttons[${index}][label]`, button.label || '');
+                payload.append(`buttons[${index}][url]`, button.url || '');
+            });
+    };
+
     const handleCarouselSubmit = async (e) => {
         e.preventDefault();
         const payload = new FormData();
-        Object.entries(carouselForm).forEach(([key, value]) => {
-            if (key === 'is_active') {
-                payload.append(key, value ? '1' : '0');
-                return;
-            }
-            payload.append(key, value);
-        });
+        payload.append('title', carouselForm.title || '');
+        payload.append('description', carouselForm.description || '');
+        payload.append('sort_order', String(carouselForm.sort_order ?? 0));
+        payload.append('is_active', carouselForm.is_active ? '1' : '0');
+        appendCarouselButtons(payload, carouselForm.buttons);
         if (carouselImage) {
             payload.append('image', carouselImage);
         }
@@ -323,8 +338,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setCarouselEditingForm({
             title: slide.title || '',
             description: slide.description || '',
-            button_label: slide.button_label || '',
-            button_url: slide.button_url || '',
+            buttons: normalizeCarouselButtons(slide.buttons, slide.button_label, slide.button_url),
             sort_order: slide.sort_order ?? 0,
             is_active: !!slide.is_active,
         });
@@ -336,13 +350,11 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         e.preventDefault();
         if (!carouselEditingId) return;
         const payload = new FormData();
-        Object.entries(carouselEditingForm).forEach(([key, value]) => {
-            if (key === 'is_active') {
-                payload.append(key, value ? '1' : '0');
-                return;
-            }
-            payload.append(key, value);
-        });
+        payload.append('title', carouselEditingForm.title || '');
+        payload.append('description', carouselEditingForm.description || '');
+        payload.append('sort_order', String(carouselEditingForm.sort_order ?? 0));
+        payload.append('is_active', carouselEditingForm.is_active ? '1' : '0');
+        appendCarouselButtons(payload, carouselEditingForm.buttons);
         if (carouselEditingImage) {
             payload.append('image', carouselEditingImage);
         }
@@ -568,9 +580,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         setTeamForm({
             name: member.name || '',
             position: member.position || '',
-            facebook_url: member.facebook_url || '',
-            twitter_url: member.twitter_url || '',
-            instagram_url: member.instagram_url || '',
+            description: member.description || '',
             sort_order: member.sort_order ?? 0,
             is_active: !!member.is_active,
         });
@@ -752,7 +762,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             )}
                                         </td>
                                         <td><strong>{slide.title || 'Tanpa judul'}</strong></td>
-                                        <td className="muted">{slide.description}</td>
+                                        <td className="muted">{stripHtml(slide.description).slice(0, 80)}</td>
                                         <td>{slide.sort_order}</td>
                                         <td>
                                             <span className={`badge ${slide.is_active ? 'text-bg-success' : 'text-bg-secondary'}`}>
@@ -926,7 +936,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                     <th>Foto</th>
                                     <th>Nama</th>
                                     <th>Jabatan</th>
-                                    <th>Sosial</th>
+                                    <th>Description</th>
                                     <th>Order</th>
                                     <th>Status</th>
                                     <th>Aksi</th>
@@ -952,28 +962,7 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                         </td>
                                         <td><strong>{member.name}</strong></td>
                                         <td className="muted">{member.position || '-'}</td>
-                                        <td>
-                                            <div className="d-flex gap-2">
-                                                {member.facebook_url ? (
-                                                    <a href={member.facebook_url} target="_blank" rel="noopener">
-                                                        <i className="fa-brands fa-facebook"></i>
-                                                    </a>
-                                                ) : null}
-                                                {member.twitter_url ? (
-                                                    <a href={member.twitter_url} target="_blank" rel="noopener">
-                                                        <i className="fa-brands fa-twitter"></i>
-                                                    </a>
-                                                ) : null}
-                                                {member.instagram_url ? (
-                                                    <a href={member.instagram_url} target="_blank" rel="noopener">
-                                                        <i className="fa-brands fa-instagram"></i>
-                                                    </a>
-                                                ) : null}
-                                                {!member.facebook_url && !member.twitter_url && !member.instagram_url && (
-                                                    <span className="muted">-</span>
-                                                )}
-                                            </div>
-                                        </td>
+                                        <td className="muted">{member.description || '-'}</td>
                                         <td>{member.sort_order}</td>
                                         <td>
                                             <span className={`badge ${member.is_active ? 'text-bg-success' : 'text-bg-secondary'}`}>
@@ -1016,11 +1005,11 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                         </td>
                                     </tr>
                                 ))}
-                                {teamMembers.length === 0 && (
-                                    <tr>
-                                        <td colSpan="7" className="text-center text-muted">Belum ada team.</td>
-                                    </tr>
-                                )}
+                                    {teamMembers.length === 0 && (
+                                        <tr>
+                                            <td colSpan="7" className="text-center text-muted">No team members yet.</td>
+                                        </tr>
+                                    )}
                             </tbody>
                         </table>
                     </div>
@@ -1301,49 +1290,123 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                     </div>
                                     <div className="col-12">
                                         <label className="form-label">Deskripsi</label>
-                                        <textarea
-                                            className="form-control"
-                                            rows="3"
-                                            value={carouselEditingId ? (carouselEditingForm.description || '') : carouselForm.description}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                        <SunEditor
+                                            key={carouselEditingId ? `carousel-desc-${carouselEditingId}` : 'carousel-desc-new'}
+                                            setContents={carouselEditingId ? (carouselEditingForm.description || '') : carouselForm.description}
+                                            onChange={(value) => {
                                                 if (carouselEditingId) {
                                                     setCarouselEditingForm((prev) => ({ ...prev, description: value }));
                                                 } else {
                                                     setCarouselForm((prev) => ({ ...prev, description: value }));
                                                 }
                                             }}
-                                        />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">Button Label</label>
-                                        <input
-                                            className="form-control"
-                                            value={carouselEditingId ? (carouselEditingForm.button_label || '') : carouselForm.button_label}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                if (carouselEditingId) {
-                                                    setCarouselEditingForm((prev) => ({ ...prev, button_label: value }));
-                                                } else {
-                                                    setCarouselForm((prev) => ({ ...prev, button_label: value }));
-                                                }
+                                            height="180px"
+                                            setOptions={{
+                                                buttonList: [
+                                                    ['undo', 'redo'],
+                                                    ['formatBlock', 'bold', 'underline', 'italic', 'strike'],
+                                                    ['fontColor', 'hiliteColor', 'removeFormat'],
+                                                    ['align', 'list', 'outdent', 'indent'],
+                                                    ['table', 'link'],
+                                                    ['fullScreen', 'codeView', 'preview'],
+                                                ],
                                             }}
                                         />
                                     </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">Button URL</label>
-                                        <input
-                                            className="form-control"
-                                            value={carouselEditingId ? (carouselEditingForm.button_url || '') : carouselForm.button_url}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
+                                    <div className="col-12">
+                                        <label className="form-label">Buttons</label>
+                                        <div className="d-grid gap-2">
+                                            {(carouselEditingId ? (carouselEditingForm.buttons || []) : carouselForm.buttons).map((button, index) => (
+                                                <div className="row g-2" key={`carousel-button-${index}`}>
+                                                    <div className="col-md-5">
+                                                        <input
+                                                            className="form-control"
+                                                            placeholder="Label"
+                                                            value={button.label || ''}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                if (carouselEditingId) {
+                                                                    setCarouselEditingForm((prev) => {
+                                                                        const nextButtons = [...(prev.buttons || [])];
+                                                                        nextButtons[index] = { ...nextButtons[index], label: value };
+                                                                        return { ...prev, buttons: nextButtons };
+                                                                    });
+                                                                } else {
+                                                                    setCarouselForm((prev) => {
+                                                                        const nextButtons = [...(prev.buttons || [])];
+                                                                        nextButtons[index] = { ...nextButtons[index], label: value };
+                                                                        return { ...prev, buttons: nextButtons };
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="col-md-5">
+                                                        <input
+                                                            className="form-control"
+                                                            placeholder="URL"
+                                                            value={button.url || ''}
+                                                            onChange={(e) => {
+                                                                const value = e.target.value;
+                                                                if (carouselEditingId) {
+                                                                    setCarouselEditingForm((prev) => {
+                                                                        const nextButtons = [...(prev.buttons || [])];
+                                                                        nextButtons[index] = { ...nextButtons[index], url: value };
+                                                                        return { ...prev, buttons: nextButtons };
+                                                                    });
+                                                                } else {
+                                                                    setCarouselForm((prev) => {
+                                                                        const nextButtons = [...(prev.buttons || [])];
+                                                                        nextButtons[index] = { ...nextButtons[index], url: value };
+                                                                        return { ...prev, buttons: nextButtons };
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="col-md-2 d-grid">
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-outline-danger"
+                                                            onClick={() => {
+                                                                if (carouselEditingId) {
+                                                                    setCarouselEditingForm((prev) => {
+                                                                        const nextButtons = (prev.buttons || []).filter((_, idx) => idx !== index);
+                                                                        return { ...prev, buttons: nextButtons.length ? nextButtons : [{ label: '', url: '' }] };
+                                                                    });
+                                                                } else {
+                                                                    setCarouselForm((prev) => {
+                                                                        const nextButtons = (prev.buttons || []).filter((_, idx) => idx !== index);
+                                                                        return { ...prev, buttons: nextButtons.length ? nextButtons : [{ label: '', url: '' }] };
+                                                                    });
+                                                                }
+                                                            }}
+                                                        >
+                                                            Hapus
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary btn-sm mt-2"
+                                            onClick={() => {
                                                 if (carouselEditingId) {
-                                                    setCarouselEditingForm((prev) => ({ ...prev, button_url: value }));
+                                                    setCarouselEditingForm((prev) => ({
+                                                        ...prev,
+                                                        buttons: [...(prev.buttons || []), { label: '', url: '' }],
+                                                    }));
                                                 } else {
-                                                    setCarouselForm((prev) => ({ ...prev, button_url: value }));
+                                                    setCarouselForm((prev) => ({
+                                                        ...prev,
+                                                        buttons: [...(prev.buttons || []), { label: '', url: '' }],
+                                                    }));
                                                 }
                                             }}
-                                        />
+                                        >
+                                            + Tambah Button
+                                        </button>
                                     </div>
                                     <div className="col-md-6">
                                         <label className="form-label">Gambar</label>
@@ -1617,6 +1680,16 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                         />
                                     </div>
                                     <div className="col-md-6">
+                                        <label className="form-label">Description</label>
+                                        <textarea
+                                            className="form-control"
+                                            rows="3"
+                                            value={teamForm.description}
+                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, description: e.target.value }))}
+                                            placeholder="Short professional summary"
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
                                         <label className="form-label">Urutan</label>
                                         <input
                                             className="form-control"
@@ -1624,33 +1697,6 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
                                             min="0"
                                             value={teamForm.sort_order}
                                             onChange={(e) => setTeamForm((prev) => ({ ...prev, sort_order: Number(e.target.value) }))}
-                                        />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">Facebook</label>
-                                        <input
-                                            className="form-control"
-                                            value={teamForm.facebook_url}
-                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, facebook_url: e.target.value }))}
-                                            placeholder="https://facebook.com/username"
-                                        />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">Twitter</label>
-                                        <input
-                                            className="form-control"
-                                            value={teamForm.twitter_url}
-                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, twitter_url: e.target.value }))}
-                                            placeholder="https://twitter.com/username"
-                                        />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label">Instagram</label>
-                                        <input
-                                            className="form-control"
-                                            value={teamForm.instagram_url}
-                                            onChange={(e) => setTeamForm((prev) => ({ ...prev, instagram_url: e.target.value }))}
-                                            placeholder="https://instagram.com/username"
                                         />
                                     </div>
                                     <div className="col-md-6">

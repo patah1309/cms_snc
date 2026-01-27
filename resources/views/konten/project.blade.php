@@ -4,20 +4,16 @@
 
 @section('content')
 @php
-    $headerPath = $settings?->header_home_path;
+    $headerPath = ($menuHeaderPaths['project'] ?? null) ?: $settings?->header_home_path;
     $headerUrl = $headerPath ? url($headerPath) : asset('img/header.jpg');
 @endphp
 <!-- Page Header Start -->
+    @php
+        $headerTitle = $menuHeaderTitles['project'] ?? 'Project';
+    @endphp
     <div class="container-fluid page-header mb-5 wow fadeIn" data-wow-delay="0.1s" style="background-image: url('{{ $headerUrl }}');">
         <div class="container">
-            <h1 class="display-3 mb-4 animated slideInDown">Projects</h1>
-            <nav aria-label="breadcrumb animated slideInDown">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Pages</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Projects</li>
-                </ol>
-            </nav>
+            <h1 class="display-3 mb-4">{{ $headerTitle }}</h1>
         </div>
     </div>
     <!-- Page Header End -->
@@ -27,7 +23,6 @@
     <div class="container-xxl py-5">
         <div class="container">
             <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
-                <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3">Our Projects</p>
                 <h1 class="display-5 mb-5">We Have Completed Latest Projects</h1>
             </div>
             <div class="owl-carousel project-carousel wow fadeInUp" data-wow-delay="0.3s">

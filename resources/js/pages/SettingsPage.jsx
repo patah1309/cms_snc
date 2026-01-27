@@ -62,6 +62,9 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
         services: useRef(null),
         news: useRef(null),
     };
+    const [menuHeaders, setMenuHeaders] = useState([]);
+    const [menuHeaderUploads, setMenuHeaderUploads] = useState({});
+    const [menuHeaderPreviews, setMenuHeaderPreviews] = useState({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -113,6 +116,27 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
             })
             .finally(() => setLoading(false));
     }, [authApi, onSettingsUpdated]);
+
+    useEffect(() => {
+        authApi.get('/menus')
+            .then((res) => setMenuHeaders(res.data.menus || []))
+            .catch(() => setMenuHeaders([]));
+    }, [authApi]);
+
+    useEffect(() => {
+        const nextPreviews = {};
+        Object.entries(menuHeaderUploads).forEach(([menuId, file]) => {
+            if (file) {
+                nextPreviews[menuId] = URL.createObjectURL(file);
+            }
+        });
+        setMenuHeaderPreviews(nextPreviews);
+        return () => {
+            Object.values(nextPreviews).forEach((url) => {
+                if (url) URL.revokeObjectURL(url);
+            });
+        };
+    }, [menuHeaderUploads]);
 
     useEffect(() => {
         if (loading) return;
@@ -320,6 +344,62 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
         }
     };
 
+    const handleMenuHeaderUpload = async (menuId, file) => {
+        if (!file) return;
+        const payload = new FormData();
+        payload.append('header_image', file);
+        try {
+            const res = await authApi.post(`/menus/${menuId}/header`, payload, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setMenuHeaders((prev) =>
+                prev.map((menu) => (menu.id === menuId ? res.data.menu : menu))
+            );
+        } catch (err) {
+            const errorMessage = err?.response?.data?.message || 'Gagal upload header menu.';
+            await Swal.fire({
+                ...swalDefaults,
+                icon: 'error',
+                title: 'Gagal',
+                text: errorMessage,
+                confirmButtonText: 'OK',
+            });
+        }
+    };
+
+    const handleMenuHeaderRemove = async (menuId) => {
+        const result = await Swal.fire({
+            ...swalDefaults,
+            icon: 'warning',
+            title: 'Hapus gambar?',
+            text: 'Header menu akan dihapus.',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            confirmButtonColor: '#dc3545',
+            cancelButtonText: 'Batal',
+        });
+        if (!result.isConfirmed) return;
+        const payload = new FormData();
+        payload.append('remove_header', '1');
+        try {
+            const res = await authApi.post(`/menus/${menuId}/header`, payload, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            setMenuHeaders((prev) =>
+                prev.map((menu) => (menu.id === menuId ? res.data.menu : menu))
+            );
+        } catch (err) {
+            const errorMessage = err?.response?.data?.message || 'Gagal menghapus header menu.';
+            await Swal.fire({
+                ...swalDefaults,
+                icon: 'error',
+                title: 'Gagal',
+                text: errorMessage,
+                confirmButtonText: 'OK',
+            });
+        }
+    };
+
     return (
         <div className="content">
             <div className="page-header">
@@ -469,41 +549,38 @@ export default function SettingsPage({ authApi, onSettingsUpdated }) {
                             </div>
                         )}
                         <div className="header-section">
-                            <h4>Header Image Per Halaman</h4>
+                            <h4>Header Image Per Menu</h4>
                             <div className="header-grid">
-                                {[
-                                    ['home', 'Home'],
-                                    ['about', 'About'],
-                                    ['services', 'Services'],
-                                    ['news', 'News'],
-                                ].map(([key, label]) => (
-                                    <div className="header-item" key={key}>
+                                {menuHeaders.map((menu) => (
+                                    <div className="header-item" key={menu.id}>
                                         <label>
-                                            {label}
+                                            {menu.title}
                                             <input
-                                                ref={headerInputRefs[key]}
                                                 type="file"
                                                 accept="image/*"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0] || null;
-                                                    setHeaderFiles((prev) => ({ ...prev, [key]: file }));
                                                     if (file) {
-                                                        setHeaderRemovals((prev) => ({ ...prev, [key]: false }));
+                                                        setMenuHeaderUploads((prev) => ({ ...prev, [menu.id]: file }));
+                                                        handleMenuHeaderUpload(menu.id, file);
                                                     }
                                                 }}
                                             />
                                             <div className="muted">Rekomendasi: 1920 x 600 px</div>
                                         </label>
-                                        {(headerPreviewUrls[key] || headerUrls[key]) && (
+                                        {(menu.header_image_url || menuHeaderUploads[menu.id]) && (
                                             <div className="logo-preview">
-                                                <img src={headerPreviewUrls[key] || headerUrls[key]} alt={`Header ${label}`} />
+                                                <img
+                                                    src={menuHeaderPreviews[menu.id] || menu.header_image_url}
+                                                    alt={`Header ${menu.title}`}
+                                                />
                                                 <div className="muted">Rekomendasi: 1920 x 600 px</div>
                                             </div>
                                         )}
                                         <button
                                             type="button"
                                             className="btn btn-outline-secondary btn-sm"
-                                            onClick={() => handleRemoveHeader(key)}
+                                            onClick={() => handleMenuHeaderRemove(menu.id)}
                                         >
                                             Hapus
                                         </button>

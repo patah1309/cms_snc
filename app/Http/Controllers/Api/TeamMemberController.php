@@ -40,9 +40,7 @@ class TeamMemberController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],
-            'facebook_url' => ['nullable', 'string', 'max:255'],
-            'twitter_url' => ['nullable', 'string', 'max:255'],
-            'instagram_url' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'max:4096'],
@@ -55,10 +53,8 @@ class TeamMemberController extends Controller
         $member = TeamMember::create([
             'name' => $validated['name'],
             'position' => $validated['position'] ?? null,
+            'description' => $validated['description'] ?? null,
             'photo_path' => $validated['photo_path'] ?? null,
-            'facebook_url' => $validated['facebook_url'] ?? null,
-            'twitter_url' => $validated['twitter_url'] ?? null,
-            'instagram_url' => $validated['instagram_url'] ?? null,
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_active' => $request->boolean('is_active', true),
         ]);
@@ -73,9 +69,7 @@ class TeamMemberController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'position' => ['nullable', 'string', 'max:255'],
-            'facebook_url' => ['nullable', 'string', 'max:255'],
-            'twitter_url' => ['nullable', 'string', 'max:255'],
-            'instagram_url' => ['nullable', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'photo' => ['nullable', 'image', 'max:4096'],
@@ -91,10 +85,8 @@ class TeamMemberController extends Controller
         $member->update([
             'name' => $validated['name'],
             'position' => $validated['position'] ?? null,
+            'description' => $validated['description'] ?? null,
             'photo_path' => $validated['photo_path'] ?? $member->photo_path,
-            'facebook_url' => $validated['facebook_url'] ?? null,
-            'twitter_url' => $validated['twitter_url'] ?? null,
-            'instagram_url' => $validated['instagram_url'] ?? null,
             'sort_order' => $validated['sort_order'] ?? $member->sort_order,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $member->is_active,
         ]);
@@ -120,9 +112,7 @@ class TeamMemberController extends Controller
             'id' => $member->id,
             'name' => $member->name,
             'position' => $member->position,
-            'facebook_url' => $member->facebook_url,
-            'twitter_url' => $member->twitter_url,
-            'instagram_url' => $member->instagram_url,
+            'description' => $member->description,
             'sort_order' => $member->sort_order,
             'is_active' => (bool) $member->is_active,
             'photo_url' => $member->photo_path ? url($member->photo_path) : null,

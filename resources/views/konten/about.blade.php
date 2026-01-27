@@ -4,20 +4,16 @@
 
 @section('content')
 @php
-    $headerPath = $settings?->header_about_path ?: $settings?->header_home_path;
+    $headerPath = ($menuHeaderPaths['about'] ?? null) ?: $settings?->header_home_path;
     $headerUrl = $headerPath ? url($headerPath) : asset('img/header.jpg');
 @endphp
 <!-- Page Header Start -->
+    @php
+        $headerTitle = $menuHeaderTitles['about'] ?? 'About';
+    @endphp
     <div class="container-fluid page-header mb-5 wow fadeIn" data-wow-delay="0.1s" style="background-image: url('{{ $headerUrl }}');">
         <div class="container">
-            <h1 class="display-3 mb-4 animated slideInDown">About</h1>
-            <nav aria-label="breadcrumb animated slideInDown">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Pages</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">About</li>
-                </ol>
-            </nav>
+            <h1 class="display-3 mb-4">{{ $headerTitle }}</h1>
         </div>
     </div>
     <!-- Page Header End -->
@@ -27,18 +23,13 @@
     <div class="container-xxl py-5">
         <div class="container">
             <div class="row g-4 align-items-end mb-4">
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                    <img class="img-fluid rounded" src="img/about.jpg">
-                </div>
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3">About Us</p>
-                    <h1 class="display-5 mb-4">The foundation of professionalism for client success</h1>
+                <div class="col-12 wow fadeInUp" data-wow-delay="0.1s">
                     <!-- <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et
                         eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet
                     </p> -->
                     <div class="border rounded-3 p-4 shadow-sm bg-white">
                         <nav>
-                            <div class="nav nav-tabs mb-4 border-bottom" id="nav-tab" role="tablist">
+                            <div class="nav nav-tabs nav-fill mb-4 border-bottom" id="nav-tab" role="tablist">
                                 <button class="nav-link fw-semibold active" id="nav-story-tab" data-bs-toggle="tab"
                                     data-bs-target="#nav-story" type="button" role="tab" aria-selected="true">
                                     About Us
@@ -144,7 +135,7 @@
 
                 </div>
             </div>
-            <div class="border rounded p-4 wow fadeInUp" data-wow-delay="0.1s">
+            {{-- <div class="border rounded p-4 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="row g-4">
                     <div class="col-lg-4 wow fadeIn" data-wow-delay="0.1s">
                         <div class="h-100">
@@ -190,7 +181,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
     </div>
     <!-- About End -->
@@ -201,40 +192,27 @@
         <div class="container-xxl py-5">
             <div class="container">
                 <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
-                    <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3">Our Team</p>
                     <h1 class="display-5 mb-5">Exclusive Team</h1>
                 </div>
-                <div class="row g-4">
+                <div class="team-carousel owl-carousel owl-theme">
                     @foreach ($teamMembers as $index => $member)
-                        <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="{{ 0.1 + ($index * 0.2) }}s">
-                            <div class="team-item">
-                                <img
-                                    class="img-fluid rounded"
-                                    src="{{ $member->photo_path ? url($member->photo_path) : asset('img/team-1.jpg') }}"
-                                    alt="{{ $member->name }}"
-                                >
-                                <div class="team-text">
-                                    <h4 class="mb-0">{{ $member->name }}</h4>
+                        <div class="team-carousel-item">
+                            <div class="team-card">
+                                <div class="team-card-image">
+                                    <img
+                                        class="img-fluid"
+                                        src="{{ $member->photo_path ? url($member->photo_path) : asset('img/team-1.jpg') }}"
+                                        alt="{{ $member->name }}"
+                                    >
+                                </div>
+                                <div class="team-card-body">
+                                    <h4 class="mb-1">{{ $member->name }}</h4>
                                     @if (!empty($member->position))
-                                        <span class="text-muted d-block mb-2">{{ $member->position }}</span>
+                                        <span class="team-position">{{ $member->position }}</span>
                                     @endif
-                                    <div class="team-social d-flex">
-                                        @if (!empty($member->facebook_url))
-                                            <a class="btn btn-square rounded-circle mx-1" href="{{ $member->facebook_url }}" target="_blank" rel="noopener">
-                                                <i class="fab fa-facebook-f"></i>
-                                            </a>
-                                        @endif
-                                        @if (!empty($member->twitter_url))
-                                            <a class="btn btn-square rounded-circle mx-1" href="{{ $member->twitter_url }}" target="_blank" rel="noopener">
-                                                <i class="fab fa-twitter"></i>
-                                            </a>
-                                        @endif
-                                        @if (!empty($member->instagram_url))
-                                            <a class="btn btn-square rounded-circle mx-1" href="{{ $member->instagram_url }}" target="_blank" rel="noopener">
-                                                <i class="fab fa-instagram"></i>
-                                            </a>
-                                        @endif
-                                    </div>
+                                    @if (!empty($member->description))
+                                        <span class="team-experience">{{ $member->description }}</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

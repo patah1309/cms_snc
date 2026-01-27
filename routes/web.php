@@ -26,6 +26,11 @@ $getFrontendData = function () {
         ->orderBy('id')
         ->get();
 
+    $allMenus = NavigationMenu::query()
+        ->orderBy('sort_order')
+        ->orderBy('id')
+        ->get();
+
     $menuById = $menus->keyBy('id');
     $grouped = $menus->groupBy('parent_id');
     $currentPath = request()->path();
@@ -79,6 +84,17 @@ $getFrontendData = function () {
     return [
         'settings' => $settings,
         'navMenus' => $buildTree(null)->values()->all(),
+        'menuHeaderPaths' => $allMenus->mapWithKeys(function ($menu) {
+            return [$menu->slug => $menu->header_image_path];
+        }),
+        'menuHeaderTitles' => $allMenus->mapWithKeys(function ($menu) {
+            return [$menu->slug => $menu->header_title];
+        }),
+        'footerServices' => \App\Models\ServiceItem::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['title']),
     ];
 };
 

@@ -15,7 +15,13 @@ class HomeCarouselSlide extends Model
         'image_path',
         'button_label',
         'button_url',
+        'buttons',
         'sort_order',
         'is_active',
+    ];
+
+    protected $casts = [
+        'buttons' => 'array',
+        'is_active' => 'boolean',
     ];
 }

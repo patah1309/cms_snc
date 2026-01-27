@@ -3,27 +3,19 @@
         <div class="container py-5">
             <div class="row g-5">
                 <div class="col-lg-3 col-md-6">
-                    <h4 class="text-white mb-4">Our Office</h4>
-                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>{{ $settings?->address ?? '123 Street, New York, USA' }}</p>
-                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>{{ $settings?->phone ?? '+012 345 67890' }}</p>
+                    <h4 class="text-white mb-4">&nbsp;</h4>
                     <p class="mb-2"><i class="fa fa-envelope me-3"></i>{{ $settings?->email ?? 'info@example.com' }}</p>
-                    <div class="d-flex pt-2">
-                        <a class="btn btn-square btn-outline-light rounded-circle me-2" href=""><i
-                                class="fab fa-twitter"></i></a>
-                        <a class="btn btn-square btn-outline-light rounded-circle me-2" href=""><i
-                                class="fab fa-facebook-f"></i></a>
-                        <a class="btn btn-square btn-outline-light rounded-circle me-2" href=""><i
-                                class="fab fa-youtube"></i></a>
-                        <a class="btn btn-square btn-outline-light rounded-circle me-2" href=""><i
-                                class="fab fa-linkedin-in"></i></a>
-                    </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <h4 class="text-white mb-4">Services</h4>
-                    <a class="btn btn-link" href="">Capital Market</a>
-                    <a class="btn btn-link" href="">Corporate Action</a>
-                    <a class="btn btn-link" href="">Mergers & Acquisitions</a>
-                    <a class="btn btn-link" href="">Corporate Finance, Restructuring & Project Finance</a>
+                    @php
+                        $footerServices = $footerServices ?? collect();
+                    @endphp
+                    @forelse ($footerServices as $service)
+                        <a class="btn btn-link" href="/services">{{ $service->title }}</a>
+                    @empty
+                        <a class="btn btn-link" href="/services">Our Services</a>
+                    @endforelse
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <h4 class="text-white mb-4">Quick Links</h4>

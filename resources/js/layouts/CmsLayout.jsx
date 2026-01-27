@@ -288,7 +288,7 @@ export default function CmsLayout({
                 </header>
                 <div className="main-body">
                     <Routes>
-                        <Route path="/dashboard" element={<DashboardPage user={user} onLogout={onLogout} />} />
+                        <Route path="/dashboard" element={<DashboardPage user={user} onLogout={onLogout} authApi={authApi} />} />
                         <Route
                             path="/cms/:slug"
                             element={(

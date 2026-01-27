@@ -11,6 +11,7 @@ export default function MenuPage({ authApi }) {
         title: '',
         slug: '',
         url: '',
+        header_title: '',
         parent_id: '',
         sort_order: 0,
         is_visible: true,
@@ -80,6 +81,7 @@ export default function MenuPage({ authApi }) {
             title: '',
             slug: '',
             url: '',
+            header_title: '',
             parent_id: '',
             sort_order: 0,
             is_visible: true,
@@ -98,6 +100,7 @@ export default function MenuPage({ authApi }) {
             title: menu.title || '',
             slug: menu.slug || '',
             url: menu.url || '',
+            header_title: menu.header_title || '',
             parent_id: menu.parent_id || '',
             sort_order: menu.sort_order ?? 0,
             is_visible: !!menu.is_visible,
@@ -127,6 +130,7 @@ export default function MenuPage({ authApi }) {
         payload.append('title', menuForm.title);
         payload.append('slug', menuForm.slug || '');
         payload.append('url', menuForm.url || '');
+        payload.append('header_title', menuForm.header_title || '');
         payload.append('parent_id', menuForm.parent_id ? String(menuForm.parent_id) : '');
         payload.append('sort_order', String(Number(menuForm.sort_order || 0)));
         payload.append('is_visible', menuForm.is_visible ? '1' : '0');
@@ -326,6 +330,15 @@ export default function MenuPage({ authApi }) {
                                             }}
                                             placeholder="https:// atau /about"
                                             disabled={editingHasChildren}
+                                        />
+                                    </div>
+                                    <div className="col-md-6">
+                                        <label className="form-label">Header Title</label>
+                                        <input
+                                            className="form-control"
+                                            value={menuForm.header_title}
+                                            onChange={(e) => setMenuForm((prev) => ({ ...prev, header_title: e.target.value }))}
+                                            placeholder="Judul di halaman header"
                                         />
                                     </div>
                                     <div className="col-md-6">

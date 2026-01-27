@@ -4,20 +4,16 @@
 
 @section('content')
 @php
-    $headerPath = $settings?->header_news_path ?: $settings?->header_home_path;
+    $headerPath = ($menuHeaderPaths['news'] ?? null) ?: $settings?->header_home_path;
     $headerUrl = $headerPath ? url($headerPath) : asset('img/header.jpg');
 @endphp
 <!-- Page Header Start -->
+    @php
+        $headerTitle = $menuHeaderTitles['news'] ?? 'News';
+    @endphp
     <div class="container-fluid page-header mb-5 wow fadeIn" data-wow-delay="0.1s" style="background-image: url('{{ $headerUrl }}');">
         <div class="container">
-            <h1 class="display-3 mb-4 animated slideInDown">News</h1>
-            <nav aria-label="breadcrumb animated slideInDown">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/">Home</a></li>
-                    <li class="breadcrumb-item"><a href="#">Pages</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">News</li>
-                </ol>
-            </nav>
+            <h1 class="display-3 mb-4">{{ $headerTitle }}</h1>
         </div>
     </div>
     <!-- Page Header End -->
@@ -27,7 +23,6 @@
         <div class="container">
             <!-- Page Header -->
             <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 760px;">
-                <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3">News & Insights</p>
                 <h1 class="display-5 mb-3">Latest Updates & Market Perspectives</h1>
                 <p class="text-muted mb-0"> Stay informed with our latest insights on capital markets, corporate actions, and M&A developments. </p>
             </div>
@@ -127,7 +122,7 @@
                             @endforeach
                         @elseif (empty($featuredPost))
                             <div class="col-12 text-center text-muted">
-                                Belum ada berita.
+                                No news available.
                             </div>
                         @endif
                     </div>
@@ -153,7 +148,7 @@
                                     </a>
                                 @endforeach
                             @else
-                                <div class="text-muted">Belum ada kategori.</div>
+                                <div class="text-muted">No categories available.</div>
                             @endif
                         </div>
                     </div>
@@ -177,7 +172,7 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="text-muted">Belum ada berita.</div>
+                            <div class="text-muted">No news available.</div>
                         @endforelse
                     </div>
                     <!-- CTA -->

@@ -26,64 +26,68 @@
                     $homeSlides = $homeSlides ?? collect();
                 @endphp
                 @php
-                    $slideOne = $homeSlides->get(0);
-                    $slideTwo = $homeSlides->get(1);
-                    $slideOneImage = $slideOne?->image_path ? url($slideOne->image_path) : asset('img/carousel-1.jpg');
-                    $slideTwoImage = $slideTwo?->image_path ? url($slideTwo->image_path) : asset('img/carousel-2.jpg');
+                    $slidesToShow = $homeSlides->values();
+                    if ($slidesToShow->isEmpty()) {
+                        $slidesToShow = collect([[
+                            'title' => 'Strategic Financial Advisory for Sustainable Growth',
+                            'description' => 'End-to-end advisory across IPO readiness, corporate actions, M&A, and restructuring-focused on value creation for clients, shareholders, and stakeholders.',
+                            'image_path' => null,
+                            'buttons' => [
+                                ['label' => 'Our Services', 'url' => '/services'],
+                                ['label' => 'Request Consultation', 'url' => $whatsappUrl],
+                                ['label' => 'Contact Us', 'url' => '/contact'],
+                            ],
+                        ]]);
+                    }
                 @endphp
-                <!-- Slide 1 -->
-                <div class="carousel-item active hero-overlay">
-                    <img class="w-100" src="{{ $slideOneImage }}" alt="Satu Nusa Capital - Advisory">
-                    <div class="carousel-caption">
-                        <div class="container hero-content">
-                            <div class="row justify-content-start">
-                                <div class="col-lg-8">
-                                    <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3 animated slideInDown hero-pill"> Capital Market - M&A - Restructuring </p>
-                                    <h1 class="mb-3 animated slideInDown hero-title text-white"> Strategic Financial Advisory for Sustainable Growth </h1>
-                                    <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 760px;"> End-to-end advisory across IPO readiness, corporate actions, M&A, and restructuring-focused on value creation for clients, shareholders, and stakeholders. </p>
-                                    <div class="d-flex flex-wrap gap-2 animated slideInDown">
-                                        <a href="/services" class="btn btn-primary py-3 px-5"> Our Services </a>
-                                        <a href="{{ $whatsappUrl }}" class="btn btn-whatsapp py-3 px-5" target="_blank" rel="noopener">
-                                            <i class="fab fa-whatsapp me-2"></i>Request Consultation </a>
-                                        <a href="/contact" class="btn btn-outline-light py-3 px-5"> Contact Us </a>
-                                    </div>
-                                    <div class="mt-4 d-flex flex-wrap gap-3 text-white-50 small animated slideInDown">
-                                        <span>
-                                            <i class="fa fa-check me-2 text-gold"></i>IPO & SME IPO </span>
-                                        <span>
-                                            <i class="fa fa-check me-2 text-gold"></i>Corporate Action </span>
-                                        <span>
-                                            <i class="fa fa-check me-2 text-gold"></i>M&A Advisory </span>
-                                        <span>
-                                            <i class="fa fa-check me-2 text-gold"></i>Restructuring & Project Finance </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Slide 2 -->
-                <div class="carousel-item hero-overlay">
-                    <img class="w-100" src="{{ $slideTwoImage }}" alt="IPO Insight">
-                    <div class="carousel-caption">
-                        <div class="container hero-content">
-                            <div class="row justify-content-start">
-                                <div class="col-lg-7 pt-3 pt-lg-4">
-                                    <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3 animated slideInDown hero-pill"> IPO Insight </p>
-                                    <h2 class="mb-3 animated slideInDown hero-title text-white"> From Pre-IPO Preparation to Post-IPO Execution </h2>
-                                    <p class="mb-4 animated slideInDown hero-lead text-white" style="max-width: 720px;"> Insights covering IPO background, benefits, tax incentives, IDX listing requirements, e-IPO mechanism, restructuring preparation, and an illustrative IPO timeline. </p>
-                                    <div class="d-flex flex-wrap gap-2 animated slideInDown">
-                                        <a href="{{ $ipoInsightLink }}" class="btn btn-primary py-3 px-5"> Explore IPO Insight </a>
-                                        <a href="/news" class="btn btn-outline-light py-3 px-5"> Read News </a>
-                                    </div>
-                                    <div class="mt-4 text-white-50 small animated slideInDown">
-                                        <i class="fa fa-info-circle me-2 text-gold"></i> Practical guidance aligned with OJK/IDX process stages.
+                @foreach ($slidesToShow as $index => $slide)
+                    @php
+                        $slideImage = !empty($slide['image_path'])
+                            ? url($slide['image_path'])
+                            : (isset($slide->image_path) && $slide->image_path ? url($slide->image_path) : asset('img/carousel-1.jpg'));
+                        $slideTitle = $slide['title'] ?? $slide->title ?? 'Strategic Financial Advisory for Sustainable Growth';
+                        $slideDescription = $slide['description'] ?? $slide->description ?? '';
+                        $slideButtons = $slide['buttons'] ?? $slide->buttons ?? null;
+                        if (empty($slideButtons) && !empty($slide->button_label) && !empty($slide->button_url)) {
+                            $slideButtons = [['label' => $slide->button_label, 'url' => $slide->button_url]];
+                        }
+                    @endphp
+                    <div class="carousel-item hero-overlay {{ $index === 0 ? 'active' : '' }}">
+                        <img class="w-100" src="{{ $slideImage }}" alt="Satu Nusa Capital">
+                        <div class="carousel-caption">
+                            <div class="container hero-content">
+                                <div class="row justify-content-start">
+                                    <div class="col-lg-8">
+                                        <h1 class="mb-3 hero-title text-white">{{ $slideTitle }}</h1>
+                                        <div class="mb-4 hero-lead text-white" style="max-width: 760px;">
+                                            {!! $slideDescription !!}
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @if (!empty($slideButtons))
+                                                @foreach ($slideButtons as $btnIndex => $button)
+                                                    @php
+                                                        $label = $button['label'] ?? '';
+                                                        $url = $button['url'] ?? '#';
+                                                        $btnClass = $btnIndex === 0 ? 'btn btn-primary py-3 px-5' : 'btn btn-outline-light py-3 px-5';
+                                                        if (stripos($label, 'whatsapp') !== false || stripos($url, 'wa.me') !== false) {
+                                                            $btnClass = 'btn btn-whatsapp py-3 px-5';
+                                                        }
+                                                    @endphp
+                                                    <a href="{{ $url }}" class="{{ $btnClass }}" target="{{ str_starts_with($url, 'http') ? '_blank' : '_self' }}" rel="noopener">
+                                                        @if (stripos($label, 'whatsapp') !== false)
+                                                            <i class="fab fa-whatsapp me-2"></i>
+                                                        @endif
+                                                        {{ $label }}
+                                                    </a>
+                                                @endforeach
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                @endforeach
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -99,14 +103,13 @@
 
 
     <!-- About Start -->
-    <div class="container-xxl py-5">
+    {{-- <div class="container-xxl py-5">
         <div class="container">
             <div class="row g-4 align-items-end mb-4">
                 <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
                     <img class="img-fluid rounded" src="img/about.jpg">
                 </div>
                 <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <p class="d-inline-block border rounded text-gold fw-semi-bold py-1 px-3">About Us</p>
                     <h1 class="display-5 mb-4">We Help Our Clients To Grow Their Business</h1>
                     <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et
                         eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet
@@ -163,6 +166,6 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
     <!-- About End -->
 @endsection

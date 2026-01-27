@@ -40,6 +40,7 @@ class NavigationMenuController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'url' => ['nullable', 'string', 'max:255'],
+            'header_title' => ['nullable', 'string', 'max:255'],
             'parent_id' => ['nullable', 'integer', 'exists:navigation_menus,id'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_visible' => ['nullable', 'boolean'],
@@ -52,6 +53,7 @@ class NavigationMenuController extends Controller
             'title' => $validated['title'],
             'slug' => $this->nullIfEmpty($validated['slug'] ?? null),
             'url' => $this->nullIfEmpty($validated['url'] ?? null),
+            'header_title' => $this->nullIfEmpty($validated['header_title'] ?? null),
             'parent_id' => $validated['parent_id'] ?? null,
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_visible' => $request->boolean('is_visible', true),
@@ -71,6 +73,7 @@ class NavigationMenuController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'url' => ['nullable', 'string', 'max:255'],
+            'header_title' => ['nullable', 'string', 'max:255'],
             'parent_id' => ['nullable', 'integer', 'exists:navigation_menus,id'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_visible' => ['nullable', 'boolean'],
@@ -83,6 +86,7 @@ class NavigationMenuController extends Controller
             'title' => $validated['title'],
             'slug' => $this->nullIfEmpty($validated['slug'] ?? null),
             'url' => $this->nullIfEmpty($validated['url'] ?? null),
+            'header_title' => $this->nullIfEmpty($validated['header_title'] ?? null),
             'parent_id' => $validated['parent_id'] ?? null,
             'sort_order' => $validated['sort_order'] ?? 0,
             'is_visible' => $request->boolean('is_visible', $menu->is_visible),
@@ -101,9 +105,42 @@ class NavigationMenuController extends Controller
         if ($menu->page && $menu->page->image_path) {
             $this->deletePublicImage($menu->page->image_path);
         }
+        if ($menu->header_image_path) {
+            $this->deletePublicHeader($menu->header_image_path);
+        }
         $menu->delete();
 
         return response()->json(['message' => 'Menu dihapus.']);
+    }
+
+    public function updateHeader(Request $request, NavigationMenu $menu)
+    {
+        $this->authorizeMenu($request, 'edit');
+
+        $validated = $request->validate([
+            'header_image' => ['nullable', 'image', 'max:4096'],
+            'remove_header' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->boolean('remove_header')) {
+            if ($menu->header_image_path) {
+                $this->deletePublicHeader($menu->header_image_path);
+            }
+            $menu->header_image_path = null;
+        }
+
+        if ($request->hasFile('header_image')) {
+            if ($menu->header_image_path) {
+                $this->deletePublicHeader($menu->header_image_path);
+            }
+            $menu->header_image_path = $this->storePublicHeader($request->file('header_image'), $menu->id);
+        }
+
+        $menu->save();
+
+        return response()->json([
+            'menu' => $menu->load('page'),
+        ]);
     }
 
     private function syncPage(Request $request, NavigationMenu $menu, array $validated): void
@@ -177,6 +214,26 @@ class NavigationMenuController extends Controller
     }
 
     private function deletePublicImage(string $path): void
+    {
+        $full = public_path($path);
+        if (File::exists($full)) {
+            File::delete($full);
+        }
+    }
+
+    private function storePublicHeader($file, int $menuId): string
+    {
+        $dir = public_path('uploads/menu-headers');
+        if (!File::exists($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+        $filename = uniqid('menu_' . $menuId . '_', true) . '.' . $file->getClientOriginalExtension();
+        $file->move($dir, $filename);
+
+        return 'uploads/menu-headers/' . $filename;
+    }
+
+    private function deletePublicHeader(string $path): void
     {
         $full = public_path($path);
         if (File::exists($full)) {
