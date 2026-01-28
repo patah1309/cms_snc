@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\NewsPost;
+use App\Support\ImageCompression;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class NewsPostController extends Controller
 {
+    use ImageCompression;
     private function authorizeMenu(Request $request, string $action): void
     {
         $user = $request->user();
@@ -46,7 +48,7 @@ class NewsPostController extends Controller
             'body' => ['nullable', 'string'],
             'status' => ['required', 'string', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
-            'cover_image' => ['nullable', 'image', 'max:4096'],
+            'cover_image' => ['nullable', 'image', 'max:10240'],
         ]);
 
         if ($request->hasFile('cover_image')) {
@@ -84,7 +86,7 @@ class NewsPostController extends Controller
             'body' => ['nullable', 'string'],
             'status' => ['required', 'string', 'in:draft,published'],
             'published_at' => ['nullable', 'date'],
-            'cover_image' => ['nullable', 'image', 'max:4096'],
+            'cover_image' => ['nullable', 'image', 'max:10240'],
             'remove_cover_image' => ['nullable', 'boolean'],
         ]);
 
@@ -155,7 +157,7 @@ class NewsPostController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('news_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/news/' . $filename;
     }

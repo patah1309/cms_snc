@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\ImageCompression;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 
 class EditorUploadController extends Controller
 {
+    use ImageCompression;
     public function store(Request $request)
     {
         $files = $this->flattenFiles($request->allFiles());
@@ -19,7 +21,7 @@ class EditorUploadController extends Controller
         $results = [];
         foreach ($files as $file) {
             $validator = Validator::make(['file' => $file], [
-                'file' => ['required', 'image', 'max:4096'],
+                'file' => ['required', 'image', 'max:10240'],
             ]);
             if ($validator->fails()) {
                 return response()->json(['errorMessage' => 'File tidak valid.'], 422);
@@ -43,7 +45,7 @@ class EditorUploadController extends Controller
         $originalName = $file->getClientOriginalName();
         $fileSize = $file->getSize();
         $filename = uniqid('editor_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
         $path = 'uploads/editor/' . $filename;
 
         return [

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeamMember;
+use App\Support\ImageCompression;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class TeamMemberController extends Controller
 {
+    use ImageCompression;
     private function authorizeMenu(Request $request, string $action): void
     {
         $user = $request->user();
@@ -43,7 +45,7 @@ class TeamMemberController extends Controller
             'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'photo' => ['nullable', 'image', 'max:4096'],
+            'photo' => ['nullable', 'image', 'max:10240'],
         ]);
 
         if ($request->hasFile('photo')) {
@@ -72,7 +74,7 @@ class TeamMemberController extends Controller
             'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'photo' => ['nullable', 'image', 'max:4096'],
+            'photo' => ['nullable', 'image', 'max:10240'],
             'remove_photo' => ['nullable', 'boolean'],
         ]);
 
@@ -135,7 +137,7 @@ class TeamMemberController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('team_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/team/' . $filename;
     }

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MenuPage;
 use App\Models\NavigationMenu;
+use App\Support\ImageCompression;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class NavigationMenuController extends Controller
 {
+    use ImageCompression;
     private function authorizeMenu(Request $request, string $action): void
     {
         $user = $request->user();
@@ -46,7 +48,7 @@ class NavigationMenuController extends Controller
             'is_visible' => ['nullable', 'boolean'],
             'page_title' => ['nullable', 'string', 'max:255'],
             'page_body' => ['nullable', 'string'],
-            'page_image' => ['nullable', 'image', 'max:4096'],
+            'page_image' => ['nullable', 'image', 'max:10240'],
             'remove_page_image' => ['nullable', 'boolean'],
         ]);
 
@@ -80,7 +82,7 @@ class NavigationMenuController extends Controller
             'is_visible' => ['nullable', 'boolean'],
             'page_title' => ['nullable', 'string', 'max:255'],
             'page_body' => ['nullable', 'string'],
-            'page_image' => ['nullable', 'image', 'max:4096'],
+            'page_image' => ['nullable', 'image', 'max:10240'],
             'remove_page_image' => ['nullable', 'boolean'],
         ]);
 
@@ -120,7 +122,7 @@ class NavigationMenuController extends Controller
         $this->authorizeMenu($request, 'edit');
 
         $validated = $request->validate([
-            'header_image' => ['nullable', 'image', 'max:4096'],
+            'header_image' => ['nullable', 'image', 'max:10240'],
             'remove_header' => ['nullable', 'boolean'],
         ]);
 
@@ -217,7 +219,7 @@ class NavigationMenuController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('page_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/pages/' . $filename;
     }
@@ -237,7 +239,7 @@ class NavigationMenuController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('menu_' . $menuId . '_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/menu-headers/' . $filename;
     }

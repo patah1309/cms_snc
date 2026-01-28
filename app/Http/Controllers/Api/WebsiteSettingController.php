@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\WebsiteSetting;
+use App\Support\ImageCompression;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class WebsiteSettingController extends Controller
 {
+    use ImageCompression;
     private function getSettings(): WebsiteSetting
     {
         return WebsiteSetting::query()->firstOrCreate([]);
@@ -51,14 +53,14 @@ class WebsiteSettingController extends Controller
             'business_type' => ['nullable', 'string', 'max:255'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string'],
-            'logo' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'header_home' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'header_about' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'header_services' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'header_news' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'header_kontak' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'header_seo' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
-            'seo_og_image' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:4096'],
+            'logo' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'header_home' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'header_about' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'header_services' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'header_news' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'header_kontak' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'header_seo' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
+            'seo_og_image' => ['nullable', 'mimes:png,jpg,jpeg,svg', 'max:10240'],
             'remove_header_home' => ['nullable', 'boolean'],
             'remove_header_about' => ['nullable', 'boolean'],
             'remove_header_services' => ['nullable', 'boolean'],
@@ -169,7 +171,7 @@ class WebsiteSettingController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('logo_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/logos/' . $filename;
     }
@@ -189,7 +191,7 @@ class WebsiteSettingController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid($key . '_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/headers/' . $filename;
     }
@@ -209,7 +211,7 @@ class WebsiteSettingController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('seo_og_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/seo/' . $filename;
     }

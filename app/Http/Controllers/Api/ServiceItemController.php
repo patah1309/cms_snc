@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ServiceItem;
+use App\Support\ImageCompression;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class ServiceItemController extends Controller
 {
+    use ImageCompression;
     private function authorizeMenu(Request $request, string $action): void
     {
         $user = $request->user();
@@ -42,7 +44,7 @@ class ServiceItemController extends Controller
             'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'cover_image' => ['nullable', 'image', 'max:4096'],
+            'cover_image' => ['nullable', 'image', 'max:10240'],
         ]);
 
         if ($request->hasFile('cover_image')) {
@@ -69,7 +71,7 @@ class ServiceItemController extends Controller
             'description' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'cover_image' => ['nullable', 'image', 'max:4096'],
+            'cover_image' => ['nullable', 'image', 'max:10240'],
             'remove_cover_image' => ['nullable', 'boolean'],
         ]);
 
@@ -130,7 +132,7 @@ class ServiceItemController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
         $filename = uniqid('service_', true) . '.' . $file->getClientOriginalExtension();
-        $file->move($dir, $filename);
+        $this->saveUploadedImage($file, $dir, $filename);
 
         return 'uploads/services/' . $filename;
     }
