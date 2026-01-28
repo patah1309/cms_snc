@@ -391,7 +391,13 @@ export default function SectionPage({ permissions, sections, onToggleVisibility,
         payload.append('description', carouselEditingForm.description || '');
         payload.append('sort_order', String(carouselEditingForm.sort_order ?? 0));
         payload.append('is_active', carouselEditingForm.is_active ? '1' : '0');
-        appendCarouselButtons(payload, carouselEditingForm.buttons);
+        const nextButtons = carouselEditingForm.buttons || [];
+        const hasButtons = nextButtons.some((button) => button?.label || button?.url);
+        if (hasButtons) {
+            appendCarouselButtons(payload, nextButtons);
+        } else {
+            payload.append('remove_buttons', '1');
+        }
         if (carouselEditingImage) {
             payload.append('image', carouselEditingImage);
         }
